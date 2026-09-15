@@ -1,0 +1,41 @@
+@model SalesOrderFormViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Nuevo pedido" : "Editar pedido";
+    var products = (IEnumerable<Product>)ViewBag.Products;
+}
+<h1>@ViewData["Title"]</h1>
+<form method="post" asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@Model.Id">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <div class="form-grid">
+        <label>Número<input asp-for="Number" /><span asp-validation-for="Number"></span></label>
+        <label>Fecha<input asp-for="OrderDate" type="date" /><span asp-validation-for="OrderDate"></span></label>
+        <label>Cliente<select asp-for="CustomerId" asp-items="ViewBag.Customers"><option value="">Selecciona</option></select><span asp-validation-for="CustomerId"></span></label>
+        <label>Estado<select asp-for="Status" asp-items="Html.GetEnumSelectList<SalesOrderStatus>()"></select><span asp-validation-for="Status"></span></label>
+    </div>
+    <h2>Líneas</h2>
+    <div asp-validation-for="Lines" class="validation-summary"></div>
+    <div class="table-wrap"><table id="lines"><thead><tr><th>Artículo</th><th>Cantidad</th><th>Precio</th><th>Dto. %</th><th></th></tr></thead><tbody>
+    @for (var i = 0; i < Model.Lines.Count; i++) {
+        <tr>
+            <td><select asp-for="Lines[i].ProductId" class="product"><option value="">Selecciona</option>@foreach (var product in products) { <option value="@product.Id" data-price="@product.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">@product.Name (@product.Sku)</option> }</select></td>
+            <td><input asp-for="Lines[i].Quantity" type="number" min="0.001" step="0.001" /></td>
+            <td><input asp-for="Lines[i].UnitPrice" class="price" type="number" min="0" step="0.01" /></td>
+            <td><input asp-for="Lines[i].DiscountPercentage" type="number" min="0" max="100" step="0.01" /></td>
+            <td><button type="button" class="remove secondary">Quitar</button></td>
+        </tr>
+    }
+    </tbody></table></div>
+    <button type="button" id="add-line" class="secondary">Añadir línea</button>
+    <div class="actions"><button type="submit">Guardar</button><a asp-action="Index">Cancelar</a></div>
+</form>
+<template id="line-template"><tr><td><select class="product"><option value="">Selecciona</option>@foreach (var product in products) { <option value="@product.Id" data-price="@product.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">@product.Name (@product.Sku)</option> }</select></td><td><input type="number" min="0.001" step="0.001" value="1" /></td><td><input class="price" type="number" min="0" step="0.01" value="0" /></td><td><input type="number" min="0" max="100" step="0.01" value="0" /></td><td><button type="button" class="remove secondary">Quitar</button></td></tr></template>
+<script>
+const body=document.querySelector("#lines tbody");
+function rename(){[...body.rows].forEach((row,i)=>{const fields=row.querySelectorAll("select,input");["ProductId","Quantity","UnitPrice","DiscountPercentage"].forEach((name,j)=>fields[j].name="Lines["+i+"]."+name);});}
+document.querySelector("#add-line").addEventListener("click",()=>{body.append(document.querySelector("#line-template").content.cloneNode(true));rename();});
+body.addEventListener("click",e=>{if(e.target.classList.contains("remove")&&body.rows.length>1){e.target.closest("tr").remove();rename();}});
+body.addEventListener("change",e=>{if(e.target.classList.contains("product")){const option=e.target.selectedOptions[0];e.target.closest("tr").querySelector(".price").value=option.dataset.price||0;}});
+rename();
+</script>

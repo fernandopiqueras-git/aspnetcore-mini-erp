@@ -1,0 +1,233 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using MiniErp.Data;
+using MiniErp.Models;
+using MiniErp.ViewModels;
+
+namespace MiniErp.Controllers;
+
+public class SalesOrdersController(AppDbContext database) : Controller
+{
+    [HttpGet]
+    public IActionResult Index(string? search, SalesOrderStatus? status)
+    {
+        var query = database.SalesOrders.AsNoTracking().Include(order => order.Customer).Include(order => order.Lines).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(order => order.Number.Contains(term) || order.Customer.Name.Contains(term));
+        }
+        if (status.HasValue)
+            query = query.Where(order => order.Status == status);
+
+        ViewBag.Search = search;
+        ViewBag.Status = status;
+        return View(query.OrderByDescending(order => order.OrderDate).ThenByDescending(order => order.Id).ToArray());
+    }
+
+    [HttpGet]
+    public IActionResult Details(int id)
+    {
+        var order = database.SalesOrders.AsNoTracking()
+            .Include(item => item.Customer)
+            .Include(item => item.Lines).ThenInclude(line => line.Product)
+            .FirstOrDefault(item => item.Id == id);
+        return order is null ? NotFound() : View(order);
+    }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        LoadSelections();
+        return View("Form", new SalesOrderFormViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Create(SalesOrderFormViewModel model)
+    {
+        Normalize(model);
+        ValidateOrder(model);
+        if (!ModelState.IsValid)
+        {
+            LoadSelections();
+            return View("Form", model);
+        }
+
+        var order = new SalesOrder();
+        Apply(model, order);
+        database.SalesOrders.Add(order);
+        database.SaveChanges();
+        return RedirectToAction(nameof(Details), new { id = order.Id });
+    }
+
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var order = database.SalesOrders.AsNoTracking().Include(item => item.Lines).FirstOrDefault(item => item.Id == id);
+        if (order is null)
+            return NotFound();
+        if (IsFinal(order))
+            return RedirectToAction(nameof(Details), new { id });
+
+        LoadSelections(order);
+        return View("Form", ToForm(order));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Edit(int id, SalesOrderFormViewModel model)
+    {
+        if (id != model.Id)
+            return BadRequest();
+
+        var order = database.SalesOrders.Include(item => item.Lines).FirstOrDefault(item => item.Id == id);
+        if (order is null)
+            return NotFound();
+        if (IsFinal(order))
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        Normalize(model);
+        ValidateOrder(model);
+        if (!ModelState.IsValid)
+        {
+            LoadSelections(order);
+            return View("Form", model);
+        }
+
+        database.SalesOrderLines.RemoveRange(order.Lines);
+        Apply(model, order);
+        database.SaveChanges();
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Confirm(int id)
+    {
+        var order = database.SalesOrders.Find(id);
+        if (order is null)
+            return NotFound();
+        if (order.Status != SalesOrderStatus.Draft)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        order.Status = SalesOrderStatus.Confirmed;
+        database.SaveChanges();
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Complete(int id)
+    {
+        var order = database.SalesOrders.Include(item => item.Lines).ThenInclude(line => line.Product).FirstOrDefault(item => item.Id == id);
+        if (order is null)
+            return NotFound();
+        if (order.Status != SalesOrderStatus.Confirmed)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var insufficient = order.Lines.FirstOrDefault(line => line.Product.Stock < line.Quantity);
+        if (insufficient is not null)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        using var transaction = database.Database.IsRelational() ? database.Database.BeginTransaction() : null;
+        foreach (var line in order.Lines)
+            line.Product.Stock -= line.Quantity;
+        order.Status = SalesOrderStatus.Completed;
+        database.SaveChanges();
+        transaction?.Commit();
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Cancel(int id)
+    {
+        var order = database.SalesOrders.Find(id);
+        if (order is null)
+            return NotFound();
+        if (order.Status is SalesOrderStatus.Completed or SalesOrderStatus.Cancelled)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        order.Status = SalesOrderStatus.Cancelled;
+        database.SaveChanges();
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    private void ValidateOrder(SalesOrderFormViewModel model)
+    {
+        if (database.SalesOrders.Any(order => order.Id != model.Id && order.Number == model.Number))
+            ModelState.AddModelError(nameof(model.Number), "Ya existe un pedido con este número.");
+
+        var customer = database.Customers.AsNoTracking().FirstOrDefault(item => item.Id == model.CustomerId);
+        if (customer is null || !customer.IsActive)
+            ModelState.AddModelError(nameof(model.CustomerId), "Selecciona un cliente activo.");
+
+        var productIds = model.Lines.Select(line => line.ProductId).Distinct().ToArray();
+        var activeProducts = database.Products.AsNoTracking().Where(product => productIds.Contains(product.Id) && product.IsActive).Select(product => product.Id).ToHashSet();
+        if (productIds.Any(id => !activeProducts.Contains(id)))
+            ModelState.AddModelError(nameof(model.Lines), "Todas las líneas deben usar artículos activos.");
+    }
+
+    private static void Apply(SalesOrderFormViewModel model, SalesOrder order)
+    {
+        order.Number = model.Number;
+        order.OrderDate = model.OrderDate;
+        order.CustomerId = model.CustomerId;
+        order.Status = model.Status;
+        order.Lines = model.Lines.Select(line => new SalesOrderLine
+        {
+            ProductId = line.ProductId,
+            Quantity = line.Quantity,
+            UnitPrice = line.UnitPrice,
+            DiscountPercentage = line.DiscountPercentage
+        }).ToList();
+    }
+
+    private void LoadSelections(SalesOrder? order = null)
+    {
+        var customerId = order?.CustomerId;
+        var customerQuery = database.Customers.AsNoTracking().Where(item => item.IsActive || item.Id == customerId);
+        ViewBag.Customers = new SelectList(customerQuery.OrderBy(item => item.Name), "Id", "Name", customerId);
+
+        var productIds = order?.Lines.Select(line => line.ProductId).ToArray() ?? [];
+        var products = database.Products.AsNoTracking().Where(item => item.IsActive || productIds.Contains(item.Id)).OrderBy(item => item.Name).ToArray();
+        ViewBag.Products = products;
+    }
+
+    private static SalesOrderFormViewModel ToForm(SalesOrder order) => new()
+    {
+        Id = order.Id,
+        Number = order.Number,
+        OrderDate = order.OrderDate,
+        CustomerId = order.CustomerId,
+        Status = order.Status,
+        Lines = order.Lines.Select(line => new SalesOrderLineInput
+        {
+            Id = line.Id,
+            ProductId = line.ProductId,
+            Quantity = line.Quantity,
+            UnitPrice = line.UnitPrice,
+            DiscountPercentage = line.DiscountPercentage
+        }).ToList()
+    };
+
+    private static void Normalize(SalesOrderFormViewModel model)
+    {
+        model.Number = model.Number?.Trim().ToUpperInvariant() ?? string.Empty;
+        model.Lines ??= [];
+    }
+
+    private static bool IsFinal(SalesOrder order) => order.Status is SalesOrderStatus.Completed or SalesOrderStatus.Cancelled;
+}
