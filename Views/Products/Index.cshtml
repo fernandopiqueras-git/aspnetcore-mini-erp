@@ -1,0 +1,10 @@
+@model IReadOnlyCollection<Product>
+@{ ViewData["Title"] = "Artículos"; }
+<div class="page-heading"><div><span class="eyebrow">MAESTROS</span><h1>Artículos</h1></div><a class="primary" asp-action="Create">Nuevo artículo</a></div>
+<form method="get" class="filters"><input name="search" value="@ViewBag.Search" placeholder="Buscar por nombre o SKU" /><select name="active"><option value="">Todos</option><option value="true" selected="@(ViewBag.Active is true ? "selected" : null)">Activos</option><option value="false" selected="@(ViewBag.Active is false ? "selected" : null)">Inactivos</option></select><button>Filtrar</button><a asp-action="Index">Limpiar</a></form>
+<section class="panel"><div class="table-scroll"><table><thead><tr><th>SKU</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var product in Model)
+{
+    <tr><td><strong>@product.Sku</strong></td><td>@product.Name</td><td>@product.UnitPrice.ToString("C")</td><td>@product.Stock.ToString("N3")</td><td><span class="badge @(product.IsActive ? "active" : "inactive")">@(product.IsActive ? "Activo" : "Inactivo")</span></td><td class="row-actions"><a asp-action="Details" asp-route-id="@product.Id">Ver</a><a asp-action="Edit" asp-route-id="@product.Id">Editar</a><a class="danger" asp-action="Delete" asp-route-id="@product.Id">Eliminar</a></td></tr>
+}
+</tbody></table></div></section>

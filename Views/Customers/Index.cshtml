@@ -1,0 +1,10 @@
+@model IReadOnlyCollection<Customer>
+@{ ViewData["Title"] = "Clientes"; }
+<div class="page-heading"><div><span class="eyebrow">MAESTROS</span><h1>Clientes</h1></div><a class="primary" asp-action="Create">Nuevo cliente</a></div>
+<form method="get" class="filters"><input name="search" value="@ViewBag.Search" placeholder="Buscar por nombre o NIF/CIF" /><select name="active"><option value="">Todos</option><option value="true" selected="@(ViewBag.Active is true ? "selected" : null)">Activos</option><option value="false" selected="@(ViewBag.Active is false ? "selected" : null)">Inactivos</option></select><button>Filtrar</button><a asp-action="Index">Limpiar</a></form>
+<section class="panel"><div class="table-scroll"><table><thead><tr><th>Nombre</th><th>NIF/CIF</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var customer in Model)
+{
+    <tr><td><strong>@customer.Name</strong></td><td>@customer.TaxId</td><td>@customer.Email</td><td>@customer.Phone</td><td><span class="badge @(customer.IsActive ? "active" : "inactive")">@(customer.IsActive ? "Activo" : "Inactivo")</span></td><td class="row-actions"><a asp-action="Details" asp-route-id="@customer.Id">Ver</a><a asp-action="Edit" asp-route-id="@customer.Id">Editar</a><a class="danger" asp-action="Delete" asp-route-id="@customer.Id">Eliminar</a></td></tr>
+}
+</tbody></table></div></section>

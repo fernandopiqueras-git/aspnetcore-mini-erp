@@ -1,0 +1,3 @@
+@model Product
+@{ ViewData["Title"] = "Eliminar artículo"; }
+<section class="form-card"><a asp-action="Details" asp-route-id="@Model.Id">← Volver</a><h1>Eliminar artículo</h1><p>¿Seguro que quieres eliminar <strong>@Model.Name</strong>?</p><p>La operación se bloqueará si el artículo está utilizado en algún pedido.</p><form asp-action="Delete" asp-route-id="@Model.Id" method="post"><div class="form-actions"><a asp-action="Details" asp-route-id="@Model.Id">Cancelar</a><button class="danger-button">Confirmar eliminación</button></div></form></section>

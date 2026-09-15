@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · Mini ERP</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<nav class="topbar">
+    <a class="brand" asp-controller="Home" asp-action="Index">Mini ERP</a>
+    <div><a asp-controller="Home" asp-action="Index">Panel</a><a asp-controller="Customers" asp-action="Index">Clientes</a><a asp-controller="Products" asp-action="Index">Artículos</a><span>Pedidos</span></div>
+</nav>
+<main class="container">@RenderBody()</main>
+</body>
+</html>

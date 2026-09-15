@@ -2,17 +2,18 @@
 
 Mini ERP construido con ASP.NET Core MVC, Entity Framework Core y SQL Server.
 
-## Primer módulo
+## Funciones actuales
 
-- Clientes con identificación fiscal y datos de contacto
-- Artículos con SKU, precio y stock
-- Pedidos de venta con cliente, fecha y estado
-- Líneas de pedido con cantidad, precio, descuento y total calculado
-- Relaciones y restricciones configuradas con Entity Framework Core
-- Migración inicial para SQL Server LocalDB
+- Panel con indicadores y últimos pedidos
+- CRUD completo de clientes
+- CRUD completo de artículos
+- Búsqueda y filtro por estado activo
+- Validación de NIF, NIE, CIF, correo, precio y stock
+- Control de duplicados de identificación fiscal y SKU
+- Bloqueo de eliminación de maestros utilizados en pedidos
+- Pedidos y líneas como núcleo de dominio preparado para el siguiente módulo
 - Datos de demostración idempotentes
-- Panel inicial de indicadores y últimos pedidos
-- Pruebas de validación, relaciones, índices, cálculos y datos iniciales
+- Pruebas automatizadas de dominio, persistencia, validaciones y controladores
 
 ## Tecnologías
 
@@ -46,10 +47,9 @@ La aplicación aplica la migración y carga datos de ejemplo la primera vez que 
 
 ## Evolución prevista
 
-1. CRUD completo de clientes y artículos
-2. Gestión completa de pedidos de venta
-3. Proveedores y compras
-4. Almacenes y movimientos de stock
-5. Facturación, cobros y pagos
-6. Usuarios, roles y auditoría
-7. API REST, Docker, integración continua y despliegue
+1. Gestión completa de pedidos de venta
+2. Proveedores y compras
+3. Almacenes y movimientos de stock
+4. Facturación, cobros y pagos
+5. Usuarios, roles y auditoría
+6. API REST, Docker, integración continua y despliegue

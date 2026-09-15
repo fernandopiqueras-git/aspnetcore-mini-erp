@@ -12,7 +12,7 @@ public static class DemoData
         var customer = new Customer
         {
             Name = "Distribuciones La Mancha",
-            TaxId = "B45000001",
+            TaxId = "B45000007",
             Email = "compras@lamancha.example",
             Phone = "925000001",
             Address = "Toledo"
