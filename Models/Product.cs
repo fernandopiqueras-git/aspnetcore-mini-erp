@@ -22,4 +22,5 @@ public class Product
 
     public bool IsActive { get; set; } = true;
     public ICollection<SalesOrderLine> SalesOrderLines { get; set; } = [];
+    public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
 }

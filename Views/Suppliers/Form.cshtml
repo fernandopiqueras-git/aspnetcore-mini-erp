@@ -1,0 +1,3 @@
+@model Supplier
+@{ViewData["Title"]=Model.Id==0?"Nuevo proveedor":"Editar proveedor";}
+<div class="form-card"><h1>@ViewData["Title"]</h1><form method="post" asp-action="@(Model.Id==0?"Create":"Edit")" asp-route-id="@Model.Id">@Html.AntiForgeryToken()<input asp-for="Id" type="hidden"/><div asp-validation-summary="All" class="validation"></div><label>Nombre<input asp-for="Name"/></label><label>NIF/CIF<input asp-for="TaxId"/></label><label>Correo<input asp-for="Email"/></label><label>Teléfono<input asp-for="Phone"/></label><label>Dirección<textarea asp-for="Address"></textarea></label><label class="check"><input asp-for="IsActive"/> Activo</label><div class="form-actions"><a asp-action="Index">Cancelar</a><button class="primary">Guardar</button></div></form></div>

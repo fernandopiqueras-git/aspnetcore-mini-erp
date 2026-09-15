@@ -1,0 +1,25 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using MiniErp.Data;
+using MiniErp.Models;
+using MiniErp.ViewModels;
+namespace MiniErp.Controllers;
+public class PurchaseOrdersController(AppDbContext db) : Controller
+{
+ [HttpGet] public IActionResult Index(string? search,PurchaseOrderStatus? status){var q=db.PurchaseOrders.AsNoTracking().Include(x=>x.Supplier).Include(x=>x.Lines).AsQueryable();if(!string.IsNullOrWhiteSpace(search)){var t=search.Trim();q=q.Where(x=>x.Number.Contains(t)||x.Supplier.Name.Contains(t));}if(status.HasValue)q=q.Where(x=>x.Status==status);ViewBag.Search=search;ViewBag.Status=status;return View(q.OrderByDescending(x=>x.OrderDate).ToArray());}
+ [HttpGet] public IActionResult Details(int id){var x=db.PurchaseOrders.AsNoTracking().Include(x=>x.Supplier).Include(x=>x.Lines).ThenInclude(x=>x.Product).FirstOrDefault(x=>x.Id==id);return x is null?NotFound():View(x);}
+ [HttpGet] public IActionResult Create(){Lists();return View("Form",new PurchaseOrderFormViewModel());}
+ [HttpPost,ValidateAntiForgeryToken] public IActionResult Create(PurchaseOrderFormViewModel m){Normalize(m);Validate(m);if(!ModelState.IsValid){Lists();return View("Form",m);}var x=new PurchaseOrder();Apply(m,x);db.Add(x);db.SaveChanges();return RedirectToAction(nameof(Details),new{id=x.Id});}
+ [HttpGet] public IActionResult Edit(int id){var x=db.PurchaseOrders.AsNoTracking().Include(x=>x.Lines).FirstOrDefault(x=>x.Id==id);if(x is null)return NotFound();if(Final(x))return RedirectToAction(nameof(Details),new{id});Lists(x);return View("Form",Map(x));}
+ [HttpPost,ValidateAntiForgeryToken] public IActionResult Edit(int id,PurchaseOrderFormViewModel m){if(id!=m.Id)return BadRequest();var x=db.PurchaseOrders.Include(x=>x.Lines).FirstOrDefault(x=>x.Id==id);if(x is null)return NotFound();if(Final(x))return RedirectToAction(nameof(Details),new{id});Normalize(m);Validate(m);if(!ModelState.IsValid){Lists(x);return View("Form",m);}db.PurchaseOrderLines.RemoveRange(x.Lines);Apply(m,x);db.SaveChanges();return RedirectToAction(nameof(Details),new{id});}
+ [HttpPost,ValidateAntiForgeryToken] public IActionResult Confirm(int id){var x=db.PurchaseOrders.Find(id);if(x is null)return NotFound();if(x.Status==PurchaseOrderStatus.Draft){x.Status=PurchaseOrderStatus.Confirmed;db.SaveChanges();}return RedirectToAction(nameof(Details),new{id});}
+ [HttpPost,ValidateAntiForgeryToken] public IActionResult Receive(int id){var x=db.PurchaseOrders.Include(x=>x.Lines).ThenInclude(x=>x.Product).FirstOrDefault(x=>x.Id==id);if(x is null)return NotFound();if(x.Status!=PurchaseOrderStatus.Confirmed)return RedirectToAction(nameof(Details),new{id});using var tr=db.Database.IsRelational()?db.Database.BeginTransaction():null;foreach(var line in x.Lines)line.Product.Stock+=line.Quantity;x.Status=PurchaseOrderStatus.Received;db.SaveChanges();tr?.Commit();return RedirectToAction(nameof(Details),new{id});}
+ [HttpPost,ValidateAntiForgeryToken] public IActionResult Cancel(int id){var x=db.PurchaseOrders.Find(id);if(x is null)return NotFound();if(x.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Confirmed){x.Status=PurchaseOrderStatus.Cancelled;db.SaveChanges();}return RedirectToAction(nameof(Details),new{id});}
+ private void Validate(PurchaseOrderFormViewModel m){if(db.PurchaseOrders.Any(x=>x.Id!=m.Id&&x.Number==m.Number))ModelState.AddModelError(nameof(m.Number),"Número duplicado.");if(!db.Suppliers.Any(x=>x.Id==m.SupplierId&&x.IsActive))ModelState.AddModelError(nameof(m.SupplierId),"Proveedor no válido.");var ids=m.Lines.Select(x=>x.ProductId).Distinct().ToArray();var ok=db.Products.Where(x=>ids.Contains(x.Id)&&x.IsActive).Select(x=>x.Id).ToHashSet();if(ids.Any(x=>!ok.Contains(x)))ModelState.AddModelError(nameof(m.Lines),"Artículo no válido.");}
+ private void Lists(PurchaseOrder? x=null){var sid=x?.SupplierId;ViewBag.Suppliers=new SelectList(db.Suppliers.AsNoTracking().Where(y=>y.IsActive||y.Id==sid).OrderBy(y=>y.Name),"Id","Name",sid);var ids=x?.Lines.Select(y=>y.ProductId).ToArray()??[];ViewBag.Products=db.Products.AsNoTracking().Where(y=>y.IsActive||ids.Contains(y.Id)).OrderBy(y=>y.Name).ToArray();}
+ private static void Apply(PurchaseOrderFormViewModel m,PurchaseOrder x){x.Number=m.Number;x.OrderDate=m.OrderDate;x.SupplierId=m.SupplierId;x.Status=m.Status;x.Lines=m.Lines.Select(y=>new PurchaseOrderLine{ProductId=y.ProductId,Quantity=y.Quantity,UnitPrice=y.UnitPrice,DiscountPercentage=y.DiscountPercentage}).ToList();}
+ private static PurchaseOrderFormViewModel Map(PurchaseOrder x)=>new(){Id=x.Id,Number=x.Number,OrderDate=x.OrderDate,SupplierId=x.SupplierId,Status=x.Status,Lines=x.Lines.Select(y=>new PurchaseOrderLineInput{ProductId=y.ProductId,Quantity=y.Quantity,UnitPrice=y.UnitPrice,DiscountPercentage=y.DiscountPercentage}).ToList()};
+ private static void Normalize(PurchaseOrderFormViewModel m){m.Number=m.Number?.Trim().ToUpperInvariant()??"";m.Lines??=[];}
+ private static bool Final(PurchaseOrder x)=>x.Status is PurchaseOrderStatus.Received or PurchaseOrderStatus.Cancelled;
+}

@@ -1,0 +1,2 @@
+@model Supplier
+@{ViewData["Title"]="Eliminar proveedor";}<div class="form-card"><h1>Eliminar proveedor</h1><p>¿Quieres eliminar <strong>@Model.Name</strong>?</p><form method="post">@Html.AntiForgeryToken()<div class="form-actions"><a asp-action="Details" asp-route-id="@Model.Id">Cancelar</a><button class="danger-button">Eliminar</button></div></form></div>
