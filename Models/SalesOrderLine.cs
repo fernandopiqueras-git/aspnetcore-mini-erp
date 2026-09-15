@@ -17,13 +17,13 @@ public class SalesOrderLine
 
     public Product Product { get; set; } = null!;
 
-    [Range(typeof(decimal), "0.001", "999999999.999")]
+    [Range(typeof(decimal), "0.001", "999999999.999", ParseLimitsInInvariantCulture = true)]
     public decimal Quantity { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999.99")]
+    [Range(typeof(decimal), "0", "999999999.99", ParseLimitsInInvariantCulture = true)]
     public decimal UnitPrice { get; set; }
 
-    [Range(typeof(decimal), "0", "100")]
+    [Range(typeof(decimal), "0", "100", ParseLimitsInInvariantCulture = true)]
     public decimal DiscountPercentage { get; set; }
 
     [NotMapped]

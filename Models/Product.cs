@@ -14,10 +14,10 @@ public class Product
     [StringLength(160)]
     public string Name { get; set; } = string.Empty;
 
-    [Range(typeof(decimal), "0", "999999999.99", ErrorMessage = "El precio no puede ser negativo.")]
+    [Range(typeof(decimal), "0", "999999999.99", ParseLimitsInInvariantCulture = true, ErrorMessage = "El precio no puede ser negativo.")]
     public decimal UnitPrice { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999.999", ErrorMessage = "El stock no puede ser negativo.")]
+    [Range(typeof(decimal), "0", "999999999.999", ParseLimitsInInvariantCulture = true, ErrorMessage = "El stock no puede ser negativo.")]
     public decimal Stock { get; set; }
 
     public bool IsActive { get; set; } = true;
