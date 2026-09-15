@@ -1,0 +1,48 @@
+@model DashboardViewModel
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini ERP</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<main class="container">
+    <header>
+        <div><span>ASP.NET CORE 8</span><h1>Mini ERP</h1><p>Base de gestión comercial para clientes, artículos y pedidos.</p></div>
+        <strong>MVP inicial</strong>
+    </header>
+    <section class="summary">
+        <article><span>Clientes activos</span><strong>@Model.ActiveCustomers</strong></article>
+        <article><span>Artículos activos</span><strong>@Model.ActiveProducts</strong></article>
+        <article><span>Pedidos abiertos</span><strong>@Model.OpenOrders</strong></article>
+        <article><span>Ventas</span><strong>@Model.SalesTotal.ToString("C")</strong></article>
+    </section>
+    <section class="panel">
+        <div class="panel-title"><div><span>VENTAS</span><h2>Últimos pedidos</h2></div><span>@Model.RecentOrders.Count registros</span></div>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Número</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Líneas</th><th>Total</th></tr></thead>
+                <tbody>
+                @foreach (var order in Model.RecentOrders)
+                {
+                    <tr><td><strong>@order.Number</strong></td><td>@order.Customer.Name</td><td>@order.OrderDate.ToString("dd/MM/yyyy")</td><td><span class="status @order.Status.ToString().ToLowerInvariant()">@StatusText(order.Status)</span></td><td>@order.Lines.Count</td><td>@order.Total.ToString("C")</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
+@functions {
+private static string StatusText(SalesOrderStatus status) => status switch
+{
+    SalesOrderStatus.Draft => "Borrador",
+    SalesOrderStatus.Confirmed => "Confirmado",
+    SalesOrderStatus.Completed => "Completado",
+    SalesOrderStatus.Cancelled => "Cancelado",
+    _ => status.ToString()
+};
+}
