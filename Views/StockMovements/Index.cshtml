@@ -1,2 +1,62 @@
-@model IEnumerable<StockMovement>
-@{ViewData["Title"]="Movimientos";}<div class="page-heading"><h1>Movimientos de stock</h1><a class="primary" asp-action="Create">Nuevo movimiento</a></div><form class="filters" method="get"><select name="productId" asp-items="ViewBag.Products"><option value="">Todos los artículos</option></select><select name="warehouseId" asp-items="ViewBag.Warehouses"><option value="">Todos los almacenes</option></select><button>Filtrar</button></form><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Origen</th><th>Destino</th><th>Cantidad</th><th>Referencia</th></tr></thead><tbody>@foreach(var x in Model){<tr><td>@x.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@x.Type</td><td>@x.Product.Name</td><td>@x.SourceWarehouse?.Name</td><td>@x.DestinationWarehouse?.Name</td><td>@x.Quantity.ToString("N3")</td><td>@x.Reference</td></tr>}</tbody></table></div>
+@model IReadOnlyCollection<StockMovement>
+@{
+    ViewData["Title"] = "Movimientos de stock";
+}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">ALMACÉN</span>
+        <h1>Movimientos de stock</h1>
+    </div>
+    <a class="primary" asp-action="Create">Nuevo movimiento</a>
+</div>
+
+<form method="get" class="filters">
+    <select name="productId" asp-items="ViewBag.Products">
+        <option value="">Todos los artículos</option>
+    </select>
+    <select name="warehouseId" asp-items="ViewBag.Warehouses">
+        <option value="">Todos los almacenes</option>
+    </select>
+    <button>Filtrar</button>
+    <a asp-action="Index">Limpiar</a>
+</form>
+
+<section class="panel">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Artículo</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Cantidad</th>
+                    <th>Referencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var movement in Model)
+                {
+                    var movementType = movement.Type switch
+                    {
+                        StockMovementType.Entry => "Entrada",
+                        StockMovementType.Exit => "Salida",
+                        StockMovementType.Transfer => "Transferencia",
+                        StockMovementType.Adjustment => "Regularización",
+                        _ => movement.Type.ToString()
+                    };
+                    <tr>
+                        <td>@movement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@movementType</td>
+                        <td>@movement.Product.Name</td>
+                        <td>@movement.SourceWarehouse?.Name</td>
+                        <td>@movement.DestinationWarehouse?.Name</td>
+                        <td>@movement.Quantity.ToString("N3")</td>
+                        <td>@movement.Reference</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

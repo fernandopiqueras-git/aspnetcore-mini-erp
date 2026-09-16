@@ -6,6 +6,31 @@ public static class DemoData
 {
     public static void Seed(AppDbContext database)
     {
+        var generalSupplier = database.Suppliers.FirstOrDefault(supplier => supplier.TaxId == "B12345674");
+        var generalSupplierCreated = generalSupplier is null;
+
+        if (generalSupplierCreated)
+        {
+            generalSupplier = new Supplier
+            {
+                Name = "Proveedor general",
+                TaxId = "B12345674",
+                Email = "compras@proveedorgeneral.example",
+                Phone = "900000000",
+                Address = "España"
+            };
+
+            database.Suppliers.Add(generalSupplier);
+            database.SaveChanges();
+
+            var purchaseOrder = database.PurchaseOrders.FirstOrDefault(order => order.Number == "PV-2026-0002");
+            if (purchaseOrder is not null)
+            {
+                purchaseOrder.SupplierId = generalSupplier.Id;
+                database.SaveChanges();
+            }
+        }
+
         if (database.Customers.Any() || database.Products.Any() || database.SalesOrders.Any())
             return;
 
