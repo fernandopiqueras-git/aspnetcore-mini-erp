@@ -1,0 +1,190 @@
+using System.Globalization;
+using System.Text;
+
+namespace MiniErp.Localization;
+
+public class HtmlLocalizationMiddleware(RequestDelegate next)
+{
+    private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
+    {
+        ["No se puede eliminar el proveedor porque tiene pedidos de compra. Puedes desactivarlo desde Editar."] = "The supplier cannot be deleted because it has purchase orders. You can deactivate it from Edit.",
+        ["No se puede eliminar el cliente porque está utilizado en pedidos."] = "The customer cannot be deleted because it is used in orders.",
+        ["No se puede eliminar el artículo porque está utilizado en pedidos."] = "The product cannot be deleted because it is used in orders.",
+        ["Todas las líneas deben usar artículos activos."] = "All lines must use active products.",
+        ["Ya existe un pedido con este número."] = "An order with this number already exists.",
+        ["Ya existe un proveedor con este NIF o CIF."] = "A supplier with this tax ID already exists.",
+        ["Ya existe un cliente con este NIF o CIF."] = "A customer with this tax ID already exists.",
+        ["Selecciona un almacén de destino."] = "Select the destination warehouse.",
+        ["Selecciona el almacén de origen."] = "Select the source warehouse.",
+        ["Selecciona un almacén activo."] = "Select an active warehouse.",
+        ["Selecciona un cliente activo."] = "Select an active customer.",
+        ["Los almacenes deben ser distintos."] = "The warehouses must be different.",
+        ["Pedido de compra"] = "Purchase order",
+        ["Pedido de venta"] = "Sales order",
+        ["Movimientos de stock"] = "Stock movements",
+        ["Entrada manual de stock"] = "Manual stock receipt",
+        ["Registrar entrada"] = "Record receipt",
+        ["Nuevo movimiento"] = "New movement",
+        ["Entrada manual"] = "Manual receipt",
+        ["Regularización manual"] = "Manual adjustment",
+        ["Destino no disponible"] = "Destination unavailable",
+        ["Origen no disponible"] = "Origin unavailable",
+        ["Todos los artículos"] = "All products",
+        ["Todos los almacenes"] = "All warehouses",
+        ["Nuevo proveedor"] = "New supplier",
+        ["Nuevo artículo"] = "New product",
+        ["Nuevo cliente"] = "New customer",
+        ["Nuevo pedido"] = "New order",
+        ["Nueva factura"] = "New invoice",
+        ["Buscar por nombre o NIF/CIF"] = "Search by name or tax ID",
+        ["Buscar por nombre o SKU"] = "Search by name or SKU",
+        ["Nombre o NIF/CIF"] = "Name or tax ID",
+        ["Motivo o documento de referencia"] = "Reason or reference document",
+        ["Selecciona un artículo"] = "Select a product",
+        ["Selecciona un almacén"] = "Select a warehouse",
+        ["Selecciona un cliente"] = "Select a customer",
+        ["Selecciona un proveedor"] = "Select a supplier",
+        ["Cantidad o nuevo stock"] = "Quantity or new stock",
+        ["Almacén destino"] = "Destination warehouse",
+        ["Almacén origen"] = "Source warehouse",
+        ["Stock insuficiente."] = "Insufficient stock.",
+        ["Artículo no válido."] = "Invalid product.",
+        ["Proveedor no válido."] = "Invalid supplier.",
+        ["Cliente no válido."] = "Invalid customer.",
+        ["Almacén no válido."] = "Invalid warehouse.",
+        ["Número duplicado."] = "Duplicate number.",
+        ["Confirmar pedido"] = "Confirm order",
+        ["Completar pedido"] = "Complete order",
+        ["Cancelar pedido"] = "Cancel order",
+        ["Recibir pedido"] = "Receive order",
+        ["Emitir factura"] = "Issue invoice",
+        ["Registrar pago"] = "Record payment",
+        ["Pedidos recientes"] = "Recent orders",
+        ["Ventas pendientes"] = "Pending sales",
+        ["Compras pendientes"] = "Pending purchases",
+        ["Facturas pendientes"] = "Pending invoices",
+        ["Total facturado"] = "Total invoiced",
+        ["Panel de gestión"] = "Management dashboard",
+        ["Gestión comercial"] = "Sales management",
+        ["Gestión de compras"] = "Purchasing",
+        ["Datos generales"] = "General information",
+        ["Líneas del pedido"] = "Order lines",
+        ["Dirección"] = "Address",
+        ["Teléfono"] = "Phone",
+        ["Correo"] = "Email",
+        ["Precio unitario"] = "Unit price",
+        ["Precio"] = "Price",
+        ["Descuento"] = "Discount",
+        ["Subtotal"] = "Subtotal",
+        ["Cantidad"] = "Quantity",
+        ["Referencia"] = "Reference",
+        ["Artículo"] = "Product",
+        ["Artículos"] = "Products",
+        ["Clientes"] = "Customers",
+        ["Cliente"] = "Customer",
+        ["Proveedores"] = "Suppliers",
+        ["Proveedor"] = "Supplier",
+        ["Almacenes"] = "Warehouses",
+        ["Almacén"] = "Warehouse",
+        ["Movimientos"] = "Movements",
+        ["Facturación"] = "Invoicing",
+        ["Facturas"] = "Invoices",
+        ["Factura"] = "Invoice",
+        ["Compras"] = "Purchases",
+        ["Compra"] = "Purchase",
+        ["Ventas"] = "Sales",
+        ["Venta"] = "Sale",
+        ["Panel"] = "Dashboard",
+        ["Fecha de vencimiento"] = "Due date",
+        ["Fecha de pedido"] = "Order date",
+        ["Fecha"] = "Date",
+        ["Número"] = "Number",
+        ["Estado"] = "Status",
+        ["Origen"] = "Source",
+        ["Destino"] = "Destination",
+        ["NIF/CIF"] = "Tax ID",
+        ["Activo"] = "Active",
+        ["Activos"] = "Active",
+        ["Inactivo"] = "Inactive",
+        ["Inactivos"] = "Inactive",
+        ["Borrador"] = "Draft",
+        ["Confirmado"] = "Confirmed",
+        ["Completado"] = "Completed",
+        ["Recibido"] = "Received",
+        ["Emitida"] = "Issued",
+        ["Pagada"] = "Paid",
+        ["Cancelado"] = "Cancelled",
+        ["Entrada"] = "Receipt",
+        ["Salida"] = "Issue",
+        ["Transferencia"] = "Transfer",
+        ["Regularización"] = "Adjustment",
+        ["Draft"] = "Draft",
+        ["Confirmed"] = "Confirmed",
+        ["Completed"] = "Completed",
+        ["Received"] = "Received",
+        ["Issued"] = "Issued",
+        ["Paid"] = "Paid",
+        ["Cancelled"] = "Cancelled",
+        ["Entry"] = "Receipt",
+        ["Exit"] = "Issue",
+        ["Adjustment"] = "Adjustment",
+        ["Sale"] = "Sale",
+        ["Purchase"] = "Purchase",
+        ["Crear"] = "Create",
+        ["Editar"] = "Edit",
+        ["Eliminar"] = "Delete",
+        ["Detalles"] = "Details",
+        ["Ver"] = "View",
+        ["Guardar"] = "Save",
+        ["Cancelar"] = "Cancel",
+        ["Volver"] = "Back",
+        ["Limpiar"] = "Clear",
+        ["Filtrar"] = "Filter",
+        ["Buscar"] = "Search",
+        ["Todos"] = "All",
+        ["Todas"] = "All",
+        ["Sí"] = "Yes",
+        ["No"] = "No",
+        ["Total"] = "Total",
+        ["Nombre"] = "Name",
+        ["Código"] = "Code",
+        ["Descripción"] = "Description",
+        ["Idioma"] = "Language",
+        ["MAESTROS"] = "MASTER DATA",
+        ["ALMACÉN"] = "WAREHOUSE"
+    };
+
+    public async Task Invoke(HttpContext context)
+    {
+        if (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName != "en")
+        {
+            await next(context);
+            return;
+        }
+
+        var originalBody = context.Response.Body;
+        await using var buffer = new MemoryStream();
+        context.Response.Body = buffer;
+
+        await next(context);
+
+        context.Response.Body = originalBody;
+        if (context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) != true)
+        {
+            buffer.Position = 0;
+            await buffer.CopyToAsync(originalBody);
+            return;
+        }
+
+        buffer.Position = 0;
+        using var reader = new StreamReader(buffer, Encoding.UTF8);
+        var html = await reader.ReadToEndAsync();
+
+        foreach (var translation in English.OrderByDescending(item => item.Key.Length))
+            html = html.Replace(translation.Key, translation.Value, StringComparison.Ordinal);
+
+        var output = Encoding.UTF8.GetBytes(html);
+        context.Response.ContentLength = output.Length;
+        await originalBody.WriteAsync(output);
+    }
+}
