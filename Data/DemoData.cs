@@ -28,6 +28,7 @@ public static class DemoData
             Customer = customer,
             OrderDate = DateTime.Today,
             Status = SalesOrderStatus.Confirmed,
+            WarehouseId = 1,
             Lines =
             [
                 new SalesOrderLine { Product = products[0], Quantity = 5m, UnitPrice = products[0].UnitPrice },
@@ -36,6 +37,9 @@ public static class DemoData
         };
 
         database.SalesOrders.Add(order);
+        database.WarehouseStocks.AddRange(
+            new WarehouseStock { WarehouseId = 1, Product = products[0], Quantity = products[0].Stock },
+            new WarehouseStock { WarehouseId = 1, Product = products[1], Quantity = products[1].Stock });
         database.SaveChanges();
     }
 }

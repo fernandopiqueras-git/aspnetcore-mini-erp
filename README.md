@@ -9,6 +9,8 @@ Mini ERP construido con ASP.NET Core MVC, Entity Framework Core y SQL Server.
 - Búsqueda y filtros de maestros y pedidos
 - Pedidos de venta con cabecera y líneas dinámicas
 - Proveedores y pedidos de compra con recepción de existencias
+- Almacenes, existencias por ubicación, entradas, salidas, transferencias y regularizaciones
+- Historial trazable de movimientos y control de concurrencia
 - Cálculos de subtotal, descuentos y total
 - Flujo borrador, confirmado, completado y cancelado
 - Descuento transaccional de existencias al completar
@@ -50,7 +52,6 @@ La aplicación aplica la migración y carga datos de ejemplo la primera vez que 
 
 ## Evolución prevista
 
-1. Almacenes y movimientos de stock
-2. Facturación, cobros y pagos
-3. Usuarios, roles y auditoría
-4. API REST, Docker, integración continua y despliegue
+1. Facturación, cobros y pagos
+2. Usuarios, roles y auditoría
+3. API REST, Docker, integración continua y despliegue

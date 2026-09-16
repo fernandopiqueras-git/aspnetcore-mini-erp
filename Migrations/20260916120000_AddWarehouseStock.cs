@@ -1,0 +1,22 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using MiniErp.Data;
+namespace MiniErp.Migrations;
+[DbContext(typeof(AppDbContext))]
+[Migration("20260916120000_AddWarehouseStock")]
+public class AddWarehouseStock:Migration
+{
+ protected override void Up(MigrationBuilder m)
+ {
+  m.CreateTable("Warehouses",t=>new{Id=t.Column<int>("int",nullable:false).Annotation("SqlServer:Identity","1, 1"),Code=t.Column<string>("nvarchar(20)",maxLength:20,nullable:false),Name=t.Column<string>("nvarchar(120)",maxLength:120,nullable:false),IsActive=t.Column<bool>("bit",nullable:false)},constraints:t=>t.PrimaryKey("PK_Warehouses",x=>x.Id));
+  m.InsertData("Warehouses",new[]{"Id","Code","Name","IsActive"},new object[]{1,"MAIN","Almacén principal",true});
+  m.AddColumn<int>("WarehouseId","SalesOrders","int",nullable:false,defaultValue:1);
+  m.AddColumn<int>("WarehouseId","PurchaseOrders","int",nullable:false,defaultValue:1);
+  m.CreateTable("WarehouseStocks",t=>new{WarehouseId=t.Column<int>("int",nullable:false),ProductId=t.Column<int>("int",nullable:false),Quantity=t.Column<decimal>("decimal(18,3)",precision:18,scale:3,nullable:false),RowVersion=t.Column<byte[]>("rowversion",rowVersion:true,nullable:false)},constraints:t=>{t.PrimaryKey("PK_WarehouseStocks",x=>new{x.WarehouseId,x.ProductId});t.ForeignKey("FK_WarehouseStocks_Products_ProductId",x=>x.ProductId,"Products","Id",onDelete:ReferentialAction.Restrict);t.ForeignKey("FK_WarehouseStocks_Warehouses_WarehouseId",x=>x.WarehouseId,"Warehouses","Id",onDelete:ReferentialAction.Restrict);});
+  m.CreateTable("StockMovements",t=>new{Id=t.Column<long>("bigint",nullable:false).Annotation("SqlServer:Identity","1, 1"),CreatedAt=t.Column<DateTime>("datetime2",nullable:false),Type=t.Column<int>("int",nullable:false),ProductId=t.Column<int>("int",nullable:false),SourceWarehouseId=t.Column<int>("int",nullable:true),DestinationWarehouseId=t.Column<int>("int",nullable:true),Quantity=t.Column<decimal>("decimal(18,3)",precision:18,scale:3,nullable:false),Reference=t.Column<string>("nvarchar(160)",maxLength:160,nullable:false)},constraints:t=>{t.PrimaryKey("PK_StockMovements",x=>x.Id);t.ForeignKey("FK_StockMovements_Products_ProductId",x=>x.ProductId,"Products","Id",onDelete:ReferentialAction.Restrict);t.ForeignKey("FK_StockMovements_Warehouses_SourceWarehouseId",x=>x.SourceWarehouseId,"Warehouses","Id",onDelete:ReferentialAction.Restrict);t.ForeignKey("FK_StockMovements_Warehouses_DestinationWarehouseId",x=>x.DestinationWarehouseId,"Warehouses","Id",onDelete:ReferentialAction.Restrict);});
+  m.Sql("INSERT INTO WarehouseStocks (WarehouseId, ProductId, Quantity) SELECT 1, Id, Stock FROM Products");
+  m.CreateIndex("IX_Warehouses_Code","Warehouses","Code",unique:true);m.CreateIndex("IX_WarehouseStocks_ProductId","WarehouseStocks","ProductId");m.CreateIndex("IX_StockMovements_CreatedAt","StockMovements","CreatedAt");m.CreateIndex("IX_StockMovements_ProductId","StockMovements","ProductId");m.CreateIndex("IX_StockMovements_SourceWarehouseId","StockMovements","SourceWarehouseId");m.CreateIndex("IX_StockMovements_DestinationWarehouseId","StockMovements","DestinationWarehouseId");m.CreateIndex("IX_SalesOrders_WarehouseId","SalesOrders","WarehouseId");m.CreateIndex("IX_PurchaseOrders_WarehouseId","PurchaseOrders","WarehouseId");
+  m.AddForeignKey("FK_SalesOrders_Warehouses_WarehouseId","SalesOrders","WarehouseId","Warehouses",principalColumn:"Id",onDelete:ReferentialAction.Restrict);m.AddForeignKey("FK_PurchaseOrders_Warehouses_WarehouseId","PurchaseOrders","WarehouseId","Warehouses",principalColumn:"Id",onDelete:ReferentialAction.Restrict);
+ }
+ protected override void Down(MigrationBuilder m){m.DropForeignKey("FK_SalesOrders_Warehouses_WarehouseId","SalesOrders");m.DropForeignKey("FK_PurchaseOrders_Warehouses_WarehouseId","PurchaseOrders");m.DropTable("StockMovements");m.DropTable("WarehouseStocks");m.DropIndex("IX_SalesOrders_WarehouseId","SalesOrders");m.DropIndex("IX_PurchaseOrders_WarehouseId","PurchaseOrders");m.DropColumn("WarehouseId","SalesOrders");m.DropColumn("WarehouseId","PurchaseOrders");m.DropTable("Warehouses");}
+}

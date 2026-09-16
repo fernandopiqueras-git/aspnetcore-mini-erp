@@ -9,6 +9,8 @@ public class PurchaseOrder
  public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.Draft;
  [Range(1, int.MaxValue)] public int SupplierId { get; set; }
  public Supplier Supplier { get; set; } = null!;
+ public int WarehouseId { get; set; }
+ public Warehouse Warehouse { get; set; }=null!;
  public ICollection<PurchaseOrderLine> Lines { get; set; } = [];
  [NotMapped] public decimal Total => Lines.Sum(x => x.LineTotal);
 }

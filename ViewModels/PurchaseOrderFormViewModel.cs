@@ -8,6 +8,7 @@ public class PurchaseOrderFormViewModel : IValidatableObject
  [DataType(DataType.Date)] public DateTime OrderDate { get; set; } = DateTime.Today;
  [Range(1, int.MaxValue)] public int SupplierId { get; set; }
  public PurchaseOrderStatus Status { get; set; }
+ [Range(1,int.MaxValue)] public int WarehouseId { get; set; }
  public List<PurchaseOrderLineInput> Lines { get; set; } = [new()];
  public IEnumerable<ValidationResult> Validate(ValidationContext context)
  {

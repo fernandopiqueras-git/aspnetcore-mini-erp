@@ -18,6 +18,7 @@ public class SalesOrderFormViewModel : IValidatableObject
     public int CustomerId { get; set; }
 
     public SalesOrderStatus Status { get; set; } = SalesOrderStatus.Draft;
+    [Range(1, int.MaxValue, ErrorMessage = "Selecciona un almacén.")] public int WarehouseId { get; set; }
     public List<SalesOrderLineInput> Lines { get; set; } = [new()];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

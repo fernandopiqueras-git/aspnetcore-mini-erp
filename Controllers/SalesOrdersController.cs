@@ -30,7 +30,7 @@ public class SalesOrdersController(AppDbContext database) : Controller
     public IActionResult Details(int id)
     {
         var order = database.SalesOrders.AsNoTracking()
-            .Include(item => item.Customer)
+            .Include(item => item.Customer).Include(item => item.Warehouse)
             .Include(item => item.Lines).ThenInclude(line => line.Product)
             .FirstOrDefault(item => item.Id == id);
         return order is null ? NotFound() : View(order);
@@ -128,12 +128,13 @@ public class SalesOrdersController(AppDbContext database) : Controller
         var order = database.SalesOrders.Include(item => item.Lines).ThenInclude(line => line.Product).FirstOrDefault(item => item.Id == id);
         if (order is null)
             return NotFound();
+        var stocks = database.WarehouseStocks.Where(stock => stock.WarehouseId == order.WarehouseId).ToDictionary(stock => stock.ProductId);
         if (order.Status != SalesOrderStatus.Confirmed)
         {
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        var insufficient = order.Lines.FirstOrDefault(line => line.Product.Stock < line.Quantity);
+        var insufficient = order.Lines.FirstOrDefault(line => !stocks.TryGetValue(line.ProductId, out var stock) || stock.Quantity < line.Quantity);
         if (insufficient is not null)
         {
             return RedirectToAction(nameof(Details), new { id });
@@ -141,7 +142,11 @@ public class SalesOrdersController(AppDbContext database) : Controller
 
         using var transaction = database.Database.IsRelational() ? database.Database.BeginTransaction() : null;
         foreach (var line in order.Lines)
+        {
+            stocks[line.ProductId].Quantity -= line.Quantity;
             line.Product.Stock -= line.Quantity;
+            database.StockMovements.Add(new() { Type = StockMovementType.Exit, ProductId = line.ProductId, SourceWarehouseId = order.WarehouseId, Quantity = line.Quantity, Reference = order.Number });
+        }
         order.Status = SalesOrderStatus.Completed;
         database.SaveChanges();
         transaction?.Commit();
@@ -176,6 +181,8 @@ public class SalesOrdersController(AppDbContext database) : Controller
 
         var productIds = model.Lines.Select(line => line.ProductId).Distinct().ToArray();
         var activeProducts = database.Products.AsNoTracking().Where(product => productIds.Contains(product.Id) && product.IsActive).Select(product => product.Id).ToHashSet();
+        if (!database.Warehouses.Any(item => item.Id == model.WarehouseId && item.IsActive))
+            ModelState.AddModelError(nameof(model.WarehouseId), "Selecciona un almacén activo.");
         if (productIds.Any(id => !activeProducts.Contains(id)))
             ModelState.AddModelError(nameof(model.Lines), "Todas las líneas deben usar artículos activos.");
     }
@@ -186,6 +193,7 @@ public class SalesOrdersController(AppDbContext database) : Controller
         order.OrderDate = model.OrderDate;
         order.CustomerId = model.CustomerId;
         order.Status = model.Status;
+        order.WarehouseId = model.WarehouseId;
         order.Lines = model.Lines.Select(line => new SalesOrderLine
         {
             ProductId = line.ProductId,
@@ -204,6 +212,8 @@ public class SalesOrdersController(AppDbContext database) : Controller
         var productIds = order?.Lines.Select(line => line.ProductId).ToArray() ?? [];
         var products = database.Products.AsNoTracking().Where(item => item.IsActive || productIds.Contains(item.Id)).OrderBy(item => item.Name).ToArray();
         ViewBag.Products = products;
+        var warehouseId = order?.WarehouseId;
+        ViewBag.Warehouses = new SelectList(database.Warehouses.AsNoTracking().Where(item => item.IsActive || item.Id == warehouseId).OrderBy(item => item.Name), "Id", "Name", warehouseId);
     }
 
     private static SalesOrderFormViewModel ToForm(SalesOrder order) => new()
@@ -213,6 +223,7 @@ public class SalesOrdersController(AppDbContext database) : Controller
         OrderDate = order.OrderDate,
         CustomerId = order.CustomerId,
         Status = order.Status,
+        WarehouseId = order.WarehouseId,
         Lines = order.Lines.Select(line => new SalesOrderLineInput
         {
             Id = line.Id,

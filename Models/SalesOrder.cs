@@ -18,6 +18,8 @@ public class SalesOrder
     public int CustomerId { get; set; }
 
     public Customer Customer { get; set; } = null!;
+    [Range(1, int.MaxValue)] public int WarehouseId { get; set; }
+    public Warehouse Warehouse { get; set; } = null!;
     public ICollection<SalesOrderLine> Lines { get; set; } = [];
 
     [NotMapped]
