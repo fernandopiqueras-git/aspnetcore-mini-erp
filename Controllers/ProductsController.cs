@@ -43,6 +43,7 @@ public class ProductsController(AppDbContext database) : Controller
         if (!ModelState.IsValid)
             return View("Form", product);
 
+        product.Stock = 0;
         database.Products.Add(product);
         database.SaveChanges();
         return RedirectToAction(nameof(Details), new { id = product.Id });
@@ -73,7 +74,6 @@ public class ProductsController(AppDbContext database) : Controller
         stored.Sku = product.Sku;
         stored.Name = product.Name;
         stored.UnitPrice = product.UnitPrice;
-        stored.Stock = product.Stock;
         stored.IsActive = product.IsActive;
         database.SaveChanges();
         return RedirectToAction(nameof(Details), new { id });
@@ -93,9 +93,12 @@ public class ProductsController(AppDbContext database) : Controller
         var product = database.Products.Find(id);
         if (product is null)
             return NotFound();
-        if (database.SalesOrderLines.Any(line => line.ProductId == id))
+        if (database.SalesOrderLines.Any(line => line.ProductId == id)
+            || database.PurchaseOrderLines.Any(line => line.ProductId == id)
+            || database.WarehouseStocks.Any(stock => stock.ProductId == id)
+            || database.StockMovements.Any(movement => movement.ProductId == id))
         {
-            TempData["Error"] = "No se puede eliminar un artículo utilizado en pedidos.";
+            TempData["Error"] = "No se puede eliminar un artículo con pedidos, existencias o movimientos de stock.";
             return RedirectToAction(nameof(Details), new { id });
         }
 

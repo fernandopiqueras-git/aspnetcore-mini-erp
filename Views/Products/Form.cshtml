@@ -1,3 +1,26 @@
 @model Product
-@{ var editing = Model.Id != 0; ViewData["Title"] = editing ? "Editar artículo" : "Nuevo artículo"; }
-<section class="form-card"><a asp-action="Index">← Volver a artículos</a><h1>@ViewData["Title"]</h1><form asp-action="@(editing ? "Edit" : "Create")" method="post"><input asp-for="Id" type="hidden" /><div asp-validation-summary="All" class="validation"></div><label>SKU<input asp-for="Sku" /></label><label>Nombre<input asp-for="Name" /></label><label>Precio unitario<input asp-for="UnitPrice" type="number" min="0" step="0.01" /></label><label>Stock<input asp-for="Stock" type="number" min="0" step="0.001" /></label><label class="check"><input asp-for="IsActive" /> Artículo activo</label><div class="form-actions"><a asp-action="Index">Cancelar</a><button class="primary">Guardar</button></div></form></section>
+@{
+    var editing = Model.Id != 0;
+    ViewData["Title"] = editing ? "Editar artículo" : "Nuevo artículo";
+}
+<section class="form-card">
+    <a asp-action="Index">← Volver a artículos</a>
+    <h1>@ViewData["Title"]</h1>
+    <form asp-action="@(editing ? "Edit" : "Create")" method="post">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="validation"></div>
+        <label>SKU<input asp-for="Sku" /></label>
+        <label>Nombre<input asp-for="Name" /></label>
+        <label>Precio unitario<input asp-for="UnitPrice" type="number" min="0" step="0.01" /></label>
+        @if (editing)
+        {
+            <label>Stock actual<input value="@Model.Stock.ToString("N3")" disabled /></label>
+            <p>El stock se modifica mediante entradas, salidas, transferencias y regularizaciones.</p>
+        }
+        <label class="check"><input asp-for="IsActive" /> Artículo activo</label>
+        <div class="form-actions">
+            <a asp-action="Index">Cancelar</a>
+            <button class="primary">Guardar</button>
+        </div>
+    </form>
+</section>

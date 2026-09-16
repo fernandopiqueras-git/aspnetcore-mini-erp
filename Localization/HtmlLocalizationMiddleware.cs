@@ -7,6 +7,9 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
 {
     private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
     {
+        ["No se puede eliminar un artículo con pedidos, existencias o movimientos de stock."] = "A product with orders, stock or inventory movements cannot be deleted.",
+        ["El stock se modifica mediante entradas, salidas, transferencias y regularizaciones."] = "Stock is changed through receipts, issues, transfers and adjustments.",
+        ["Stock actual"] = "Current stock",
         ["No se puede eliminar un cliente utilizado en pedidos."] = "A customer used in orders cannot be deleted.",
         ["No se puede eliminar un artículo utilizado en pedidos."] = "A product used in orders cannot be deleted.",
         ["Ya existe un artículo con este SKU."] = "A product with this SKU already exists.",

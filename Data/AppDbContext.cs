@@ -1,25 +1,98 @@
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Models;
+
 namespace MiniErp.Data;
+
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
- public DbSet<Customer> Customers=>Set<Customer>(); public DbSet<Product> Products=>Set<Product>(); public DbSet<SalesOrder> SalesOrders=>Set<SalesOrder>(); public DbSet<SalesOrderLine> SalesOrderLines=>Set<SalesOrderLine>();
- public DbSet<Supplier> Suppliers=>Set<Supplier>(); public DbSet<PurchaseOrder> PurchaseOrders=>Set<PurchaseOrder>(); public DbSet<PurchaseOrderLine> PurchaseOrderLines=>Set<PurchaseOrderLine>();
- public DbSet<Invoice> Invoices=>Set<Invoice>(); public DbSet<Payment> Payments=>Set<Payment>();
- public DbSet<Warehouse> Warehouses=>Set<Warehouse>(); public DbSet<WarehouseStock> WarehouseStocks=>Set<WarehouseStock>(); public DbSet<StockMovement> StockMovements=>Set<StockMovement>();
- protected override void OnModelCreating(ModelBuilder b)
- {
-  b.Entity<Customer>(e=>{e.HasIndex(x=>x.TaxId).IsUnique();e.Property(x=>x.Name).IsUnicode();});
-  b.Entity<Product>(e=>{e.HasIndex(x=>x.Sku).IsUnique();e.Property(x=>x.UnitPrice).HasPrecision(18,2);e.Property(x=>x.Stock).HasPrecision(18,3);});
-  b.Entity<SalesOrder>(e=>{e.HasIndex(x=>x.Number).IsUnique();e.HasOne(x=>x.Customer).WithMany(x=>x.SalesOrders).HasForeignKey(x=>x.CustomerId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.Warehouse).WithMany().HasForeignKey(x=>x.WarehouseId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<SalesOrderLine>(e=>{e.Property(x=>x.Quantity).HasPrecision(18,3);e.Property(x=>x.UnitPrice).HasPrecision(18,2);e.Property(x=>x.DiscountPercentage).HasPrecision(5,2);e.HasOne(x=>x.SalesOrder).WithMany(x=>x.Lines).HasForeignKey(x=>x.SalesOrderId).OnDelete(DeleteBehavior.Cascade);e.HasOne(x=>x.Product).WithMany(x=>x.SalesOrderLines).HasForeignKey(x=>x.ProductId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<Supplier>(e=>e.HasIndex(x=>x.TaxId).IsUnique());
-  b.Entity<PurchaseOrder>(e=>{e.HasIndex(x=>x.Number).IsUnique();e.HasOne(x=>x.Supplier).WithMany(x=>x.PurchaseOrders).HasForeignKey(x=>x.SupplierId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.Warehouse).WithMany().HasForeignKey(x=>x.WarehouseId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<PurchaseOrderLine>(e=>{e.Property(x=>x.Quantity).HasPrecision(18,3);e.Property(x=>x.UnitPrice).HasPrecision(18,2);e.Property(x=>x.DiscountPercentage).HasPrecision(5,2);e.HasOne(x=>x.PurchaseOrder).WithMany(x=>x.Lines).HasForeignKey(x=>x.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);e.HasOne(x=>x.Product).WithMany(x=>x.PurchaseOrderLines).HasForeignKey(x=>x.ProductId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<Invoice>(e=>{e.HasIndex(x=>new{x.Series,x.Number}).IsUnique();e.Property(x=>x.TaxBase).HasPrecision(18,2);e.Property(x=>x.TaxAmount).HasPrecision(18,2);e.Property(x=>x.Total).HasPrecision(18,2);e.HasOne(x=>x.SalesOrder).WithMany().HasForeignKey(x=>x.SalesOrderId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.PurchaseOrder).WithMany().HasForeignKey(x=>x.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<Payment>(e=>{e.Property(x=>x.Amount).HasPrecision(18,2);e.HasOne(x=>x.Invoice).WithMany(x=>x.Payments).HasForeignKey(x=>x.InvoiceId).OnDelete(DeleteBehavior.Cascade);});
-  b.Entity<Warehouse>(e=>e.HasIndex(x=>x.Code).IsUnique());
-  b.Entity<WarehouseStock>(e=>{e.HasKey(x=>new{x.WarehouseId,x.ProductId});e.Property(x=>x.Quantity).HasPrecision(18,3);e.Property(x=>x.RowVersion).IsRowVersion();e.HasOne(x=>x.Warehouse).WithMany(x=>x.Stocks).HasForeignKey(x=>x.WarehouseId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.Product).WithMany(x=>x.WarehouseStocks).HasForeignKey(x=>x.ProductId).OnDelete(DeleteBehavior.Restrict);});
-  b.Entity<StockMovement>(e=>{e.Property(x=>x.Quantity).HasPrecision(18,3);e.HasIndex(x=>x.CreatedAt);e.HasOne(x=>x.Product).WithMany(x=>x.StockMovements).HasForeignKey(x=>x.ProductId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.SourceWarehouse).WithMany(x=>x.SourceMovements).HasForeignKey(x=>x.SourceWarehouseId).OnDelete(DeleteBehavior.Restrict);e.HasOne(x=>x.DestinationWarehouse).WithMany(x=>x.DestinationMovements).HasForeignKey(x=>x.DestinationWarehouseId).OnDelete(DeleteBehavior.Restrict);});
- }
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+    public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<WarehouseStock> WarehouseStocks => Set<WarehouseStock>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasIndex(customer => customer.TaxId).IsUnique();
+            entity.Property(customer => customer.Name).IsUnicode();
+        });
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasIndex(product => product.Sku).IsUnique();
+            entity.Property(product => product.UnitPrice).HasPrecision(18, 2);
+            entity.Property(product => product.Stock).HasPrecision(18, 3);
+        });
+        modelBuilder.Entity<SalesOrder>(entity =>
+        {
+            entity.HasIndex(order => order.Number).IsUnique();
+            entity.HasOne(order => order.Customer).WithMany(customer => customer.SalesOrders).HasForeignKey(order => order.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(order => order.Warehouse).WithMany().HasForeignKey(order => order.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<SalesOrderLine>(entity =>
+        {
+            entity.Property(line => line.Quantity).HasPrecision(18, 3);
+            entity.Property(line => line.UnitPrice).HasPrecision(18, 2);
+            entity.Property(line => line.DiscountPercentage).HasPrecision(5, 2);
+            entity.HasOne(line => line.SalesOrder).WithMany(order => order.Lines).HasForeignKey(line => line.SalesOrderId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(line => line.Product).WithMany(product => product.SalesOrderLines).HasForeignKey(line => line.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<Supplier>(entity => entity.HasIndex(supplier => supplier.TaxId).IsUnique());
+        modelBuilder.Entity<PurchaseOrder>(entity =>
+        {
+            entity.HasIndex(order => order.Number).IsUnique();
+            entity.HasOne(order => order.Supplier).WithMany(supplier => supplier.PurchaseOrders).HasForeignKey(order => order.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(order => order.Warehouse).WithMany().HasForeignKey(order => order.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<PurchaseOrderLine>(entity =>
+        {
+            entity.Property(line => line.Quantity).HasPrecision(18, 3);
+            entity.Property(line => line.UnitPrice).HasPrecision(18, 2);
+            entity.Property(line => line.DiscountPercentage).HasPrecision(5, 2);
+            entity.HasOne(line => line.PurchaseOrder).WithMany(order => order.Lines).HasForeignKey(line => line.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(line => line.Product).WithMany(product => product.PurchaseOrderLines).HasForeignKey(line => line.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.HasIndex(invoice => new { invoice.Series, invoice.Number }).IsUnique();
+            entity.HasIndex(invoice => invoice.SalesOrderId).IsUnique().HasFilter("[SalesOrderId] IS NOT NULL");
+            entity.HasIndex(invoice => invoice.PurchaseOrderId).IsUnique().HasFilter("[PurchaseOrderId] IS NOT NULL");
+            entity.Property(invoice => invoice.TaxBase).HasPrecision(18, 2);
+            entity.Property(invoice => invoice.TaxRate).HasPrecision(18, 2);
+            entity.Property(invoice => invoice.TaxAmount).HasPrecision(18, 2);
+            entity.Property(invoice => invoice.Total).HasPrecision(18, 2);
+            entity.HasOne(invoice => invoice.SalesOrder).WithMany().HasForeignKey(invoice => invoice.SalesOrderId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(invoice => invoice.PurchaseOrder).WithMany().HasForeignKey(invoice => invoice.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.Property(payment => payment.Amount).HasPrecision(18, 2);
+            entity.HasOne(payment => payment.Invoice).WithMany(invoice => invoice.Payments).HasForeignKey(payment => payment.InvoiceId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<Warehouse>(entity => entity.HasIndex(warehouse => warehouse.Code).IsUnique());
+        modelBuilder.Entity<WarehouseStock>(entity =>
+        {
+            entity.HasKey(stock => new { stock.WarehouseId, stock.ProductId });
+            entity.Property(stock => stock.Quantity).HasPrecision(18, 3);
+            entity.Property(stock => stock.RowVersion).IsRowVersion();
+            entity.HasOne(stock => stock.Warehouse).WithMany(warehouse => warehouse.Stocks).HasForeignKey(stock => stock.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(stock => stock.Product).WithMany(product => product.WarehouseStocks).HasForeignKey(stock => stock.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<StockMovement>(entity =>
+        {
+            entity.Property(movement => movement.Quantity).HasPrecision(18, 3);
+            entity.HasIndex(movement => movement.CreatedAt);
+            entity.HasOne(movement => movement.Product).WithMany(product => product.StockMovements).HasForeignKey(movement => movement.ProductId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(movement => movement.SourceWarehouse).WithMany(warehouse => warehouse.SourceMovements).HasForeignKey(movement => movement.SourceWarehouseId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(movement => movement.DestinationWarehouse).WithMany(warehouse => warehouse.DestinationMovements).HasForeignKey(movement => movement.DestinationWarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+    }
 }

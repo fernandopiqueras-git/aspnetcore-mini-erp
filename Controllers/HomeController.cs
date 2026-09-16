@@ -23,7 +23,7 @@ public class HomeController(AppDbContext database) : Controller
             ActiveCustomers = database.Customers.Count(customer => customer.IsActive),
             ActiveProducts = database.Products.Count(product => product.IsActive),
             OpenOrders = orders.Count(order => order.Status is SalesOrderStatus.Draft or SalesOrderStatus.Confirmed),
-            SalesTotal = orders.Where(order => order.Status != SalesOrderStatus.Cancelled).Sum(order => order.Total),
+            SalesTotal = orders.Where(order => order.Status == SalesOrderStatus.Completed).Sum(order => order.Total),
             RecentOrders = orders.Take(5).ToArray()
         };
 

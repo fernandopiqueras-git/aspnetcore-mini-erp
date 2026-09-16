@@ -110,6 +110,52 @@ public class AppDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("SalesOrderLines");
         });
 
+
+        modelBuilder.Entity("MiniErp.Models.Invoice", entity =>
+        {
+            entity.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int").UseIdentityColumn();
+            entity.Property<DateTime>("DueDate").HasColumnType("datetime2");
+            entity.Property<DateTime>("IssueDate").HasColumnType("datetime2");
+            entity.Property<string>("Number").IsRequired().HasMaxLength(30).HasColumnType("nvarchar(30)");
+            entity.Property<int?>("PurchaseOrderId").HasColumnType("int");
+            entity.Property<int?>("SalesOrderId").HasColumnType("int");
+            entity.Property<string>("Series").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
+            entity.Property<int>("Status").HasColumnType("int");
+            entity.Property<decimal>("TaxAmount").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+            entity.Property<decimal>("TaxBase").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+            entity.Property<decimal>("TaxRate").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+            entity.Property<decimal>("Total").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+            entity.Property<int>("Type").HasColumnType("int");
+            entity.HasKey("Id");
+            entity.HasIndex("PurchaseOrderId").IsUnique().HasFilter("[PurchaseOrderId] IS NOT NULL");
+            entity.HasIndex("SalesOrderId").IsUnique().HasFilter("[SalesOrderId] IS NOT NULL");
+            entity.HasIndex("Series", "Number").IsUnique();
+            entity.ToTable("Invoices");
+        });
+
+        modelBuilder.Entity("MiniErp.Models.Payment", entity =>
+        {
+            entity.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int").UseIdentityColumn();
+            entity.Property<decimal>("Amount").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+            entity.Property<DateTime>("Date").HasColumnType("datetime2");
+            entity.Property<int>("InvoiceId").HasColumnType("int");
+            entity.Property<string>("Method").IsRequired().HasMaxLength(80).HasColumnType("nvarchar(80)");
+            entity.HasKey("Id");
+            entity.HasIndex("InvoiceId");
+            entity.ToTable("Payments");
+        });
+
+
+        modelBuilder.Entity("MiniErp.Models.Invoice", entity =>
+        {
+            entity.HasOne("MiniErp.Models.PurchaseOrder", "PurchaseOrder").WithMany().HasForeignKey("PurchaseOrderId").OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne("MiniErp.Models.SalesOrder", "SalesOrder").WithMany().HasForeignKey("SalesOrderId").OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity("MiniErp.Models.Payment", entity =>
+        {
+            entity.HasOne("MiniErp.Models.Invoice", "Invoice").WithMany("Payments").HasForeignKey("InvoiceId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+        });
+
         modelBuilder.Entity("MiniErp.Models.PurchaseOrder", entity =>
         {
             entity.HasOne("MiniErp.Models.Supplier", "Supplier").WithMany("PurchaseOrders").HasForeignKey("SupplierId").OnDelete(DeleteBehavior.Restrict).IsRequired();

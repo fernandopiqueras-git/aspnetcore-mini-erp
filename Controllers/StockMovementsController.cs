@@ -40,13 +40,13 @@ public class StockMovementsController(AppDbContext db) : Controller
     }
 
     [HttpGet]
-    public IActionResult Create(StockMovementType type = StockMovementType.Entry)
+    public IActionResult Create()
     {
         Lists();
         return View(new StockMovementViewModel
         {
-            Type = type,
-            Reference = type == StockMovementType.Entry ? "Entrada manual" : string.Empty
+            Type = StockMovementType.Entry,
+            Reference = "Entrada manual"
         });
     }
 
@@ -54,6 +54,8 @@ public class StockMovementsController(AppDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Create(StockMovementViewModel model)
     {
+        model.Type = StockMovementType.Entry;
+        model.SourceWarehouseId = null;
         ValidateReferences(model);
         if (!ModelState.IsValid)
         {
