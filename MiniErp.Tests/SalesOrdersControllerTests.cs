@@ -49,6 +49,7 @@ public class SalesOrdersControllerTests
         {
             Number = "PV-1",
             CustomerId = 1,
+            WarehouseId = 1,
             Status = SalesOrderStatus.Confirmed,
             Lines = [new SalesOrderLine { ProductId = 1, Quantity = 2, UnitPrice = 10 }]
         };
@@ -92,7 +93,7 @@ public class SalesOrdersControllerTests
     {
         using var database = CreateDatabase();
         Seed(database);
-        var order = new SalesOrder { Number = "PV-1", CustomerId = 1, Status = status };
+        var order = new SalesOrder { Number = "PV-1", CustomerId = 1, WarehouseId = 1, Status = status };
         database.SalesOrders.Add(order);
         database.SaveChanges();
         var controller = new SalesOrdersController(database);
@@ -115,6 +116,7 @@ public class SalesOrdersControllerTests
         Id = id,
         Number = "PV-2",
         CustomerId = 1,
+        WarehouseId = 1,
         Status = SalesOrderStatus.Draft,
         Lines = [new SalesOrderLineInput { ProductId = 1, Quantity = 1, UnitPrice = 10 }]
     };
@@ -128,7 +130,9 @@ public class SalesOrdersControllerTests
     private static void Seed(AppDbContext database)
     {
         database.Customers.Add(new Customer { Id = 1, Name = "Cliente", TaxId = "12345678Z", IsActive = true });
+        database.Warehouses.Add(new Warehouse { Id = 1, Code = "MAIN", Name = "Principal" });
         database.Products.Add(new Product { Id = 1, Sku = "A-1", Name = "Artículo", UnitPrice = 10, Stock = 10, IsActive = true });
+        database.WarehouseStocks.Add(new WarehouseStock { WarehouseId = 1, ProductId = 1, Quantity = 10 });
         database.SaveChanges();
     }
 }

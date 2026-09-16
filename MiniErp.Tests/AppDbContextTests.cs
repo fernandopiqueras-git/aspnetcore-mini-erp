@@ -10,7 +10,7 @@ public class AppDbContextTests
     public void Model_HasTheExpectedRelationshipsAndDeleteBehaviors()
     {
         using var database = CreateDatabase();
-        var orderCustomer = database.Model.FindEntityType(typeof(SalesOrder))!.GetForeignKeys().Single();
+        var orderCustomer = database.Model.FindEntityType(typeof(SalesOrder))!.GetForeignKeys().Single(key => key.PrincipalEntityType.ClrType == typeof(Customer));
         var lineRelationships = database.Model.FindEntityType(typeof(SalesOrderLine))!.GetForeignKeys().ToArray();
 
         Assert.Equal(DeleteBehavior.Restrict, orderCustomer.DeleteBehavior);
