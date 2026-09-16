@@ -16,8 +16,12 @@ public class OrderWorkflowSecurityTests
         var model = SalesModel();
         model.Status = SalesOrderStatus.Completed;
 
-        new SalesOrdersController(database).Create(model);
+        var controller = new SalesOrdersController(database);
+        controller.ModelState.AddModelError(nameof(model.Status), "Estado manipulado.");
 
+        controller.Create(model);
+
+        Assert.True(controller.ModelState.IsValid);
         Assert.Equal(SalesOrderStatus.Draft, database.SalesOrders.Single().Status);
     }
 
@@ -39,8 +43,12 @@ public class OrderWorkflowSecurityTests
         var model = SalesModel(order.Id);
         model.Status = SalesOrderStatus.Draft;
 
-        new SalesOrdersController(database).Edit(order.Id, model);
+        var controller = new SalesOrdersController(database);
+        controller.ModelState.AddModelError(nameof(model.Status), "Estado manipulado.");
 
+        controller.Edit(order.Id, model);
+
+        Assert.True(controller.ModelState.IsValid);
         Assert.Equal(SalesOrderStatus.Confirmed, order.Status);
     }
 
@@ -52,8 +60,12 @@ public class OrderWorkflowSecurityTests
         var model = PurchaseModel();
         model.Status = PurchaseOrderStatus.Received;
 
-        new PurchaseOrdersController(database).Create(model);
+        var controller = new PurchaseOrdersController(database);
+        controller.ModelState.AddModelError(nameof(model.Status), "Estado manipulado.");
 
+        controller.Create(model);
+
+        Assert.True(controller.ModelState.IsValid);
         Assert.Equal(PurchaseOrderStatus.Draft, database.PurchaseOrders.Single().Status);
     }
 
@@ -75,8 +87,12 @@ public class OrderWorkflowSecurityTests
         var model = PurchaseModel(order.Id);
         model.Status = PurchaseOrderStatus.Draft;
 
-        new PurchaseOrdersController(database).Edit(order.Id, model);
+        var controller = new PurchaseOrdersController(database);
+        controller.ModelState.AddModelError(nameof(model.Status), "Estado manipulado.");
 
+        controller.Edit(order.Id, model);
+
+        Assert.True(controller.ModelState.IsValid);
         Assert.Equal(PurchaseOrderStatus.Confirmed, order.Status);
     }
 

@@ -47,6 +47,8 @@ public class SalesOrdersController(AppDbContext database) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Create(SalesOrderFormViewModel model)
     {
+        model.Status = SalesOrderStatus.Draft;
+        ModelState.Remove(nameof(model.Status));
         Normalize(model);
         ValidateOrder(model);
         if (!ModelState.IsValid)
@@ -90,6 +92,8 @@ public class SalesOrdersController(AppDbContext database) : Controller
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        model.Status = order.Status;
+        ModelState.Remove(nameof(model.Status));
         Normalize(model);
         ValidateOrder(model);
         if (!ModelState.IsValid)

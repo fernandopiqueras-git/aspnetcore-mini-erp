@@ -56,6 +56,8 @@ public class StockMovementsController(AppDbContext db) : Controller
     {
         model.Type = StockMovementType.Entry;
         model.SourceWarehouseId = null;
+        ModelState.Remove(nameof(model.Type));
+        ModelState.Remove(nameof(model.SourceWarehouseId));
         ValidateReferences(model);
         if (!ModelState.IsValid)
         {
