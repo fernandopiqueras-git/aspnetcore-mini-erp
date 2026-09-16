@@ -9,7 +9,7 @@ public class AddWarehouseStock:Migration
  protected override void Up(MigrationBuilder m)
  {
   m.CreateTable("Warehouses",t=>new{Id=t.Column<int>("int",nullable:false).Annotation("SqlServer:Identity","1, 1"),Code=t.Column<string>("nvarchar(20)",maxLength:20,nullable:false),Name=t.Column<string>("nvarchar(120)",maxLength:120,nullable:false),IsActive=t.Column<bool>("bit",nullable:false)},constraints:t=>t.PrimaryKey("PK_Warehouses",x=>x.Id));
-  m.InsertData("Warehouses",new[]{"Id","Code","Name","IsActive"},new object[]{1,"MAIN","Almacén principal",true});
+  m.InsertData(table:"Warehouses",columns:new[]{"Id","Code","Name","IsActive"},columnTypes:new[]{"int","nvarchar(20)","nvarchar(120)","bit"},values:new object[]{1,"MAIN","Almacén principal",true});
   m.AddColumn<int>("WarehouseId","SalesOrders","int",nullable:false,defaultValue:1);
   m.AddColumn<int>("WarehouseId","PurchaseOrders","int",nullable:false,defaultValue:1);
   m.CreateTable("WarehouseStocks",t=>new{WarehouseId=t.Column<int>("int",nullable:false),ProductId=t.Column<int>("int",nullable:false),Quantity=t.Column<decimal>("decimal(18,3)",precision:18,scale:3,nullable:false),RowVersion=t.Column<byte[]>("rowversion",rowVersion:true,nullable:false)},constraints:t=>{t.PrimaryKey("PK_WarehouseStocks",x=>new{x.WarehouseId,x.ProductId});t.ForeignKey("FK_WarehouseStocks_Products_ProductId",x=>x.ProductId,"Products","Id",onDelete:ReferentialAction.Restrict);t.ForeignKey("FK_WarehouseStocks_Warehouses_WarehouseId",x=>x.WarehouseId,"Warehouses","Id",onDelete:ReferentialAction.Restrict);});
