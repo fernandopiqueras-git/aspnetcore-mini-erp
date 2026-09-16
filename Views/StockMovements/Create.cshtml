@@ -1,2 +1,37 @@
 @model StockMovementViewModel
-@{ViewData["Title"]="Nuevo movimiento";}<div class="form-card"><h1>Nuevo movimiento</h1><form method="post">@Html.AntiForgeryToken()<div asp-validation-summary="All" class="validation"></div><label>Tipo<select asp-for="Type" asp-items="Html.GetEnumSelectList<StockMovementType>()"></select></label><label>Artículo<select asp-for="ProductId" asp-items="ViewBag.Products"><option value="">Selecciona</option></select></label><label>Almacén origen<select asp-for="SourceWarehouseId" asp-items="ViewBag.Warehouses"><option value="">No aplica</option></select></label><label>Almacén destino<select asp-for="DestinationWarehouseId" asp-items="ViewBag.Warehouses"><option value="">No aplica</option></select></label><label>Cantidad o nuevo stock<input asp-for="Quantity" type="number" min=".001" step=".001"/></label><label>Referencia<input asp-for="Reference"/></label><div class="form-actions"><a asp-action="Index">Cancelar</a><button class="primary">Guardar</button></div></form></div>
+@{
+    ViewData["Title"] = "Entrada manual de stock";
+}
+<div class="form-card">
+    <span class="eyebrow">ALMACÉN</span>
+    <h1>Entrada manual de stock</h1>
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="validation"></div>
+        <input asp-for="Type" type="hidden" value="@StockMovementType.Entry" />
+        <label>
+            Artículo
+            <select asp-for="ProductId" asp-items="ViewBag.Products">
+                <option value="">Selecciona un artículo</option>
+            </select>
+        </label>
+        <label>
+            Almacén destino
+            <select asp-for="DestinationWarehouseId" asp-items="ViewBag.Warehouses">
+                <option value="">Selecciona un almacén</option>
+            </select>
+        </label>
+        <label>
+            Cantidad
+            <input asp-for="Quantity" type="number" min=".001" step=".001" />
+        </label>
+        <label>
+            Referencia
+            <input asp-for="Reference" placeholder="Motivo o documento de referencia" />
+        </label>
+        <div class="form-actions">
+            <a asp-action="Index">Cancelar</a>
+            <button class="primary">Registrar entrada</button>
+        </div>
+    </form>
+</div>

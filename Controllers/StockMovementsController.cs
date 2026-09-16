@@ -4,23 +4,139 @@ using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Models;
 using MiniErp.ViewModels;
+
 namespace MiniErp.Controllers;
-public class StockMovementsController(AppDbContext db):Controller
+
+public class StockMovementsController(AppDbContext db) : Controller
 {
- [HttpGet] public IActionResult Index(int? productId,int? warehouseId){var q=db.StockMovements.AsNoTracking().Include(x=>x.Product).Include(x=>x.SourceWarehouse).Include(x=>x.DestinationWarehouse).AsQueryable();if(productId.HasValue)q=q.Where(x=>x.ProductId==productId);if(warehouseId.HasValue)q=q.Where(x=>x.SourceWarehouseId==warehouseId||x.DestinationWarehouseId==warehouseId);Lists();return View(q.OrderByDescending(x=>x.CreatedAt).Take(500).ToArray());}
- [HttpGet] public IActionResult Create(){Lists();return View(new StockMovementViewModel());}
- [HttpPost,ValidateAntiForgeryToken] public IActionResult Create(StockMovementViewModel m)
- {
-  ValidateReferences(m);if(!ModelState.IsValid){Lists();return View(m);}
-  using var tr=db.Database.IsRelational()?db.Database.BeginTransaction():null;
-  var product=db.Products.Find(m.ProductId)!;
-  if(m.Type is StockMovementType.Exit or StockMovementType.Transfer){var source=Stock(m.SourceWarehouseId!.Value,m.ProductId);if(source.Quantity<m.Quantity){ModelState.AddModelError(nameof(m.Quantity),"Stock insuficiente.");Lists();return View(m);}source.Quantity-=m.Quantity;product.Stock-=m.Quantity;}
-  if(m.Type is StockMovementType.Entry or StockMovementType.Transfer){var destination=Stock(m.DestinationWarehouseId!.Value,m.ProductId);destination.Quantity+=m.Quantity;product.Stock+=m.Quantity;}
-  if(m.Type==StockMovementType.Adjustment){var destination=Stock(m.DestinationWarehouseId!.Value,m.ProductId);var difference=m.Quantity-destination.Quantity;destination.Quantity=m.Quantity;product.Stock+=difference;}
-    db.StockMovements.Add(new(){Type=m.Type,ProductId=m.ProductId,SourceWarehouseId=m.SourceWarehouseId,DestinationWarehouseId=m.DestinationWarehouseId,Quantity=m.Quantity,Reference=m.Reference.Trim()});
-  db.SaveChanges();tr?.Commit();return RedirectToAction(nameof(Index));
- }
- private WarehouseStock Stock(int warehouseId,int productId){var x=db.WarehouseStocks.Find(warehouseId,productId);if(x is not null)return x;x=new(){WarehouseId=warehouseId,ProductId=productId};db.Add(x);return x;}
- private void ValidateReferences(StockMovementViewModel m){if(!db.Products.Any(x=>x.Id==m.ProductId&&x.IsActive))ModelState.AddModelError(nameof(m.ProductId),"Artículo no válido.");var ids=new[]{m.SourceWarehouseId,m.DestinationWarehouseId}.Where(x=>x.HasValue).Select(x=>x!.Value).Distinct().ToArray();if(db.Warehouses.Count(x=>ids.Contains(x.Id)&&x.IsActive)!=ids.Length)ModelState.AddModelError("", "Almacén no válido.");}
- private void Lists(){ViewBag.Products=new SelectList(db.Products.AsNoTracking().Where(x=>x.IsActive).OrderBy(x=>x.Name),"Id","Name");ViewBag.Warehouses=new SelectList(db.Warehouses.AsNoTracking().Where(x=>x.IsActive).OrderBy(x=>x.Name),"Id","Name");}
+    [HttpGet]
+    public IActionResult Index(int? productId, int? warehouseId)
+    {
+        var query = db.StockMovements.AsNoTracking()
+            .Include(movement => movement.Product)
+            .Include(movement => movement.SourceWarehouse)
+            .Include(movement => movement.DestinationWarehouse)
+            .AsQueryable();
+
+        if (productId.HasValue)
+            query = query.Where(movement => movement.ProductId == productId);
+        if (warehouseId.HasValue)
+            query = query.Where(movement => movement.SourceWarehouseId == warehouseId || movement.DestinationWarehouseId == warehouseId);
+
+        var movements = query.OrderByDescending(movement => movement.CreatedAt).Take(500).ToArray();
+        var references = movements.Select(movement => movement.Reference).Distinct().ToArray();
+
+        ViewBag.PurchaseOrderReferences = db.PurchaseOrders.AsNoTracking()
+            .Where(order => references.Contains(order.Number))
+            .Select(order => order.Number)
+            .ToHashSet();
+        ViewBag.SalesOrderReferences = db.SalesOrders.AsNoTracking()
+            .Where(order => references.Contains(order.Number))
+            .Select(order => order.Number)
+            .ToHashSet();
+
+        Lists();
+        return View(movements);
+    }
+
+    [HttpGet]
+    public IActionResult Create(StockMovementType type = StockMovementType.Entry)
+    {
+        Lists();
+        return View(new StockMovementViewModel
+        {
+            Type = type,
+            Reference = type == StockMovementType.Entry ? "Entrada manual" : string.Empty
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Create(StockMovementViewModel model)
+    {
+        ValidateReferences(model);
+        if (!ModelState.IsValid)
+        {
+            Lists();
+            return View(model);
+        }
+
+        using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction() : null;
+        var product = db.Products.Find(model.ProductId)!;
+
+        if (model.Type is StockMovementType.Exit or StockMovementType.Transfer)
+        {
+            var source = Stock(model.SourceWarehouseId!.Value, model.ProductId);
+            if (source.Quantity < model.Quantity)
+            {
+                ModelState.AddModelError(nameof(model.Quantity), "Stock insuficiente.");
+                Lists();
+                return View(model);
+            }
+
+            source.Quantity -= model.Quantity;
+            product.Stock -= model.Quantity;
+        }
+
+        if (model.Type is StockMovementType.Entry or StockMovementType.Transfer)
+        {
+            var destination = Stock(model.DestinationWarehouseId!.Value, model.ProductId);
+            destination.Quantity += model.Quantity;
+            product.Stock += model.Quantity;
+        }
+
+        if (model.Type == StockMovementType.Adjustment)
+        {
+            var destination = Stock(model.DestinationWarehouseId!.Value, model.ProductId);
+            var difference = model.Quantity - destination.Quantity;
+            destination.Quantity = model.Quantity;
+            product.Stock += difference;
+        }
+
+        db.StockMovements.Add(new StockMovement
+        {
+            Type = model.Type,
+            ProductId = model.ProductId,
+            SourceWarehouseId = model.SourceWarehouseId,
+            DestinationWarehouseId = model.DestinationWarehouseId,
+            Quantity = model.Quantity,
+            Reference = model.Reference.Trim()
+        });
+
+        db.SaveChanges();
+        transaction?.Commit();
+        return RedirectToAction(nameof(Index));
+    }
+
+    private WarehouseStock Stock(int warehouseId, int productId)
+    {
+        var stock = db.WarehouseStocks.Find(warehouseId, productId);
+        if (stock is not null)
+            return stock;
+
+        stock = new WarehouseStock { WarehouseId = warehouseId, ProductId = productId };
+        db.Add(stock);
+        return stock;
+    }
+
+    private void ValidateReferences(StockMovementViewModel model)
+    {
+        if (!db.Products.Any(product => product.Id == model.ProductId && product.IsActive))
+            ModelState.AddModelError(nameof(model.ProductId), "Artículo no válido.");
+
+        var warehouseIds = new[] { model.SourceWarehouseId, model.DestinationWarehouseId }
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToArray();
+
+        if (db.Warehouses.Count(warehouse => warehouseIds.Contains(warehouse.Id) && warehouse.IsActive) != warehouseIds.Length)
+            ModelState.AddModelError(string.Empty, "Almacén no válido.");
+    }
+
+    private void Lists()
+    {
+        ViewBag.Products = new SelectList(db.Products.AsNoTracking().Where(product => product.IsActive).OrderBy(product => product.Name), "Id", "Name");
+        ViewBag.Warehouses = new SelectList(db.Warehouses.AsNoTracking().Where(warehouse => warehouse.IsActive).OrderBy(warehouse => warehouse.Name), "Id", "Name");
+    }
 }

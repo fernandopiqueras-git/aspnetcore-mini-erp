@@ -1,13 +1,39 @@
 @model IReadOnlyCollection<StockMovement>
 @{
     ViewData["Title"] = "Movimientos de stock";
+    var purchaseOrderReferences = (IReadOnlySet<string>)ViewBag.PurchaseOrderReferences;
+    var salesOrderReferences = (IReadOnlySet<string>)ViewBag.SalesOrderReferences;
+
+    string MovementType(StockMovement movement) => movement.Type switch
+    {
+        StockMovementType.Entry => "Entrada",
+        StockMovementType.Exit => "Salida",
+        StockMovementType.Transfer => "Transferencia",
+        StockMovementType.Adjustment => "Regularización",
+        _ => movement.Type.ToString()
+    };
+
+    string MovementOrigin(StockMovement movement) => movement.Type switch
+    {
+        StockMovementType.Entry when purchaseOrderReferences.Contains(movement.Reference) => $"Pedido de compra {movement.Reference}",
+        StockMovementType.Entry => "Entrada manual",
+        StockMovementType.Adjustment => "Regularización manual",
+        _ => movement.SourceWarehouse?.Name ?? "Origen no disponible"
+    };
+
+    string MovementDestination(StockMovement movement) => movement.Type switch
+    {
+        StockMovementType.Exit when salesOrderReferences.Contains(movement.Reference) => $"Pedido de venta {movement.Reference}",
+        StockMovementType.Exit => "Salida manual",
+        _ => movement.DestinationWarehouse?.Name ?? "Destino no disponible"
+    };
 }
 <div class="page-heading">
     <div>
         <span class="eyebrow">ALMACÉN</span>
         <h1>Movimientos de stock</h1>
     </div>
-    <a class="primary" asp-action="Create">Nuevo movimiento</a>
+    <a class="primary" asp-action="Create" asp-route-type="@StockMovementType.Entry">Entrada manual</a>
 </div>
 
 <form method="get" class="filters">
@@ -38,20 +64,12 @@
             <tbody>
                 @foreach (var movement in Model)
                 {
-                    var movementType = movement.Type switch
-                    {
-                        StockMovementType.Entry => "Entrada",
-                        StockMovementType.Exit => "Salida",
-                        StockMovementType.Transfer => "Transferencia",
-                        StockMovementType.Adjustment => "Regularización",
-                        _ => movement.Type.ToString()
-                    };
                     <tr>
                         <td>@movement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@movementType</td>
+                        <td>@MovementType(movement)</td>
                         <td>@movement.Product.Name</td>
-                        <td>@movement.SourceWarehouse?.Name</td>
-                        <td>@movement.DestinationWarehouse?.Name</td>
+                        <td>@MovementOrigin(movement)</td>
+                        <td>@MovementDestination(movement)</td>
                         <td>@movement.Quantity.ToString("N3")</td>
                         <td>@movement.Reference</td>
                     </tr>
