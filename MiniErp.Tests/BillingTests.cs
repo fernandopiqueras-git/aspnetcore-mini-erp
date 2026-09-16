@@ -1,0 +1,1 @@
+using MiniErp.Models;namespace MiniErp.Tests;public class BillingTests{[Fact]public void Invoice_CalculatesOutstanding(){var x=new Invoice{Total=121,Payments=[new(){Amount=40}]};Assert.Equal(81m,x.Outstanding);}[Fact]public void PaidAmount_SumsPartialPayments(){var x=new Invoice{Payments=[new(){Amount=20},new(){Amount=30}]};Assert.Equal(50m,x.PaidAmount);}}

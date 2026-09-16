@@ -1,0 +1,1 @@
+namespace MiniErp.Models; public enum InvoiceType { Sale, Purchase }
