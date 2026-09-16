@@ -65,7 +65,7 @@
                 @foreach (var movement in Model)
                 {
                     <tr>
-                        <td>@movement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@movement.CreatedAt.ToLocalTime().ToString("g")</td>
                         <td>@MovementType(movement)</td>
                         <td>@movement.Product.Name</td>
                         <td>@MovementOrigin(movement)</td>

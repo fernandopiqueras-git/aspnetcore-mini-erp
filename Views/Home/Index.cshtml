@@ -16,7 +16,7 @@
         <table><thead><tr><th>Número</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Líneas</th><th>Total</th></tr></thead><tbody>
         @foreach (var order in Model.RecentOrders)
         {
-            <tr><td><strong>@order.Number</strong></td><td>@order.Customer.Name</td><td>@order.OrderDate.ToString("dd/MM/yyyy")</td><td><span class="status @order.Status.ToString().ToLowerInvariant()">@StatusText(order.Status)</span></td><td>@order.Lines.Count</td><td>@order.Total.ToString("C")</td></tr>
+            <tr><td><strong>@order.Number</strong></td><td>@order.Customer.Name</td><td>@order.OrderDate.ToString("d")</td><td><span class="status @order.Status.ToString().ToLowerInvariant()">@StatusText(order.Status)</span></td><td>@order.Lines.Count</td><td>@order.Total.ToString("C")</td></tr>
         }
         </tbody></table>
     </div>

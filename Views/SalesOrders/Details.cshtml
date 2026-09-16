@@ -4,7 +4,7 @@
 }
 <div class="page-heading"><div><p class="eyebrow">Pedido</p><h1>@Model.Number</h1></div><span class="badge">@Model.Status</span></div>
 @if (TempData["Error"] is string error) { <div class="validation-summary">@error</div> }
-<div class="detail-grid"><div><strong>Cliente</strong><p>@Model.Customer.Name</p></div><div><strong>Fecha</strong><p>@Model.OrderDate.ToString("dd/MM/yyyy")</p></div><div><strong>Total</strong><p>@Model.Total.ToString("N2") €</p></div></div>
+<div class="detail-grid"><div><strong>Cliente</strong><p>@Model.Customer.Name</p></div><div><strong>Fecha</strong><p>@Model.OrderDate.ToString("d")</p></div><div><strong>Total</strong><p>@Model.Total.ToString("N2") €</p></div></div>
 <div class="table-wrap"><table><thead><tr><th>Artículo</th><th>Cantidad</th><th>Precio</th><th>Dto.</th><th>Total</th></tr></thead><tbody>
 @foreach (var line in Model.Lines) { <tr><td>@line.Product.Name</td><td>@line.Quantity.ToString("N3")</td><td>@line.UnitPrice.ToString("N2") €</td><td>@line.DiscountPercentage.ToString("N2") %</td><td>@line.LineTotal.ToString("N2") €</td></tr> }
 </tbody></table></div>
