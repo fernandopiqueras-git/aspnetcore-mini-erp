@@ -192,7 +192,6 @@ public class SalesOrdersController(AppDbContext database) : Controller
         order.Number = model.Number;
         order.OrderDate = model.OrderDate;
         order.CustomerId = model.CustomerId;
-        order.Status = model.Status;
         order.WarehouseId = model.WarehouseId;
         order.Lines = model.Lines.Select(line => new SalesOrderLine
         {

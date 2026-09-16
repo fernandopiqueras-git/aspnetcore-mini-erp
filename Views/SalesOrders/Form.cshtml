@@ -14,7 +14,7 @@
         <label>Fecha<input asp-for="OrderDate" type="date" /><span asp-validation-for="OrderDate"></span></label>
         <label>Cliente<select asp-for="CustomerId" asp-items="ViewBag.Customers"><option value="">Selecciona</option></select><span asp-validation-for="CustomerId"></span></label>
         <label>Almacén<select asp-for="WarehouseId" asp-items="ViewBag.Warehouses"><option value="">Selecciona</option></select></label>
-        <label>Estado<select asp-for="Status" asp-items="Html.GetEnumSelectList<SalesOrderStatus>()"></select><span asp-validation-for="Status"></span></label>
+        <label>Estado <strong>@Model.Status</strong></label>
     </div>
     <h2>Líneas</h2>
     <div asp-validation-for="Lines" class="validation-summary"></div>
