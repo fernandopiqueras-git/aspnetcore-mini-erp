@@ -50,6 +50,7 @@ public class InvoicesController(AppDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Issue(int id)
     {
+        using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
         var invoice = db.Invoices.Find(id);
         if (invoice is null)
             return NotFound();
@@ -58,6 +59,7 @@ public class InvoicesController(AppDbContext db) : Controller
             invoice.Status = InvoiceStatus.Issued;
             db.SaveChanges();
         }
+        transaction?.Commit();
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -87,6 +89,7 @@ public class InvoicesController(AppDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Cancel(int id)
     {
+        using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
         var invoice = db.Invoices.Include(item => item.Payments).FirstOrDefault(item => item.Id == id);
         if (invoice is null)
             return NotFound();
@@ -95,6 +98,7 @@ public class InvoicesController(AppDbContext db) : Controller
             invoice.Status = InvoiceStatus.Cancelled;
             db.SaveChanges();
         }
+        transaction?.Commit();
         return RedirectToAction(nameof(Details), new { id });
     }
 

@@ -93,6 +93,24 @@ public class BillingWorkflowTests
         Assert.Equal(InvoiceStatus.Issued, invoice.Status);
     }
 
+    [Theory]
+    [InlineData(InvoiceStatus.Draft)]
+    [InlineData(InvoiceStatus.Paid)]
+    [InlineData(InvoiceStatus.Cancelled)]
+    public void Payment_IsRejectedOutsideIssuedState(InvoiceStatus status)
+    {
+        using var database = CreateDatabase();
+        var invoice = AddInvoice(database, 121);
+        invoice.Status = status;
+        database.SaveChanges();
+
+        var result = new InvoicesController(database).Pay(invoice.Id, 20, "Transferencia");
+
+        Assert.IsType<BadRequestResult>(result);
+        Assert.Empty(invoice.Payments);
+        Assert.Equal(status, invoice.Status);
+    }
+
     [Fact]
     public void SaleInvoices_UseSequentialNumbersPerYearAndSeries()
     {
