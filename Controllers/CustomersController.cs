@@ -114,7 +114,7 @@ public class CustomersController(AppDbContext database) : Controller
     private static void Normalize(Customer customer)
     {
         customer.Name = customer.Name?.Trim() ?? string.Empty;
-        customer.TaxId = (customer.TaxId ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty).ToUpperInvariant();
+        customer.TaxId = string.Concat((customer.TaxId ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
         customer.Email = EmptyToNull(customer.Email)?.ToLowerInvariant();
         customer.Phone = EmptyToNull(customer.Phone);
         customer.Address = EmptyToNull(customer.Address);

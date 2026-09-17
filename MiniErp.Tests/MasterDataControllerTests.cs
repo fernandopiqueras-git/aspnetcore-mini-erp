@@ -24,6 +24,21 @@ public class MasterDataControllerTests
     }
 
     [Fact]
+    public void CustomerCreate_RejectsFormattedDuplicateTaxId()
+    {
+        using var database = CreateDatabase();
+        database.Customers.Add(new Customer { Name = "Existente", TaxId = "12345678Z" });
+        database.SaveChanges();
+        var controller = new CustomersController(database);
+
+        var result = controller.Create(new Customer { Name = "Nuevo", TaxId = "12.345.678-Z" });
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Single(database.Customers);
+    }
+
+    [Fact]
     public void ProductCreate_NormalizesAndPersistsAValidProduct()
     {
         using var database = CreateDatabase();

@@ -14,5 +14,6 @@ public class SuppliersController(AppDbContext db) : Controller
  [HttpGet] public IActionResult Delete(int id){var x=db.Suppliers.AsNoTracking().FirstOrDefault(x=>x.Id==id);return x is null?NotFound():View(x);}
  [HttpPost,ActionName("Delete"),ValidateAntiForgeryToken] public IActionResult DeleteConfirmed(int id){var x=db.Suppliers.Find(id);if(x is null)return NotFound();if(db.PurchaseOrders.Any(o=>o.SupplierId==id)){if(ControllerContext.HttpContext?.RequestServices.GetService(typeof(Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory)) is not null)TempData["Error"]="No se puede eliminar el proveedor porque tiene pedidos de compra. Puedes desactivarlo desde Editar.";return RedirectToAction(nameof(Details),new{id});}db.Remove(x);db.SaveChanges();return RedirectToAction(nameof(Index));}
  private void Duplicate(Supplier x){if(db.Suppliers.Any(y=>y.Id!=x.Id&&y.TaxId==x.TaxId))ModelState.AddModelError(nameof(x.TaxId),"Ya existe un proveedor con este NIF o CIF.");}
- private static void Normalize(Supplier x){x.Name=x.Name?.Trim()??"";x.TaxId=x.TaxId?.Trim().ToUpperInvariant()??"";x.Email=x.Email?.Trim();x.Phone=x.Phone?.Trim();x.Address=x.Address?.Trim();}
+ private static void Normalize(Supplier x){x.Name=x.Name?.Trim()??"";x.TaxId=string.Concat((x.TaxId??"").Where(char.IsLetterOrDigit)).ToUpperInvariant();x.Email=EmptyToNull(x.Email)?.ToLowerInvariant();x.Phone=EmptyToNull(x.Phone);x.Address=EmptyToNull(x.Address);}
+ private static string? EmptyToNull(string? value)=>string.IsNullOrWhiteSpace(value)?null:value.Trim();
 }
