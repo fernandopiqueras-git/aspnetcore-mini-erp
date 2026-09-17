@@ -166,13 +166,16 @@ public class InvoicePdfService(IOptions<CompanyOptions> companyOptions)
                     }
                 });
 
-                page.Footer().AlignCenter().Text(text =>
-                {
-                    text.Span(Text("Página ", "Page "));
-                    text.CurrentPageNumber();
-                    text.Span(" / ");
-                    text.TotalPages();
-                }).FontSize(8).FontColor(Colors.Grey.Darken1);
+                page.Footer()
+                    .DefaultTextStyle(style => style.FontSize(8).FontColor(Colors.Grey.Darken1))
+                    .AlignCenter()
+                    .Text(text =>
+                    {
+                        text.Span(Text("Página ", "Page "));
+                        text.CurrentPageNumber();
+                        text.Span(" / ");
+                        text.TotalPages();
+                    });
             });
         }).GeneratePdf();
     }
