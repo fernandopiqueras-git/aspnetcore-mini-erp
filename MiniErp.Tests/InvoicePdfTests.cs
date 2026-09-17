@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using MiniErp.Controllers;
 using MiniErp.Data;
 using MiniErp.Models;
@@ -60,6 +59,59 @@ public class InvoicePdfTests
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal("application/pdf", file.ContentType);
         Assert.Equal("Factura-V-2026-00001.pdf", file.FileDownloadName);
+        Assert.True(file.FileContents.Length > 1000);
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(file.FileContents, 0, 4));
+    }
+
+    [Fact]
+    public void Pdf_GeneratesAnInvoiceForAPurchaseWithPayment()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+        using var database = CreateDatabase();
+        database.AddRange(
+            new Supplier { Id = 1, Name = "Proveedor PDF", TaxId = "B12345674", Address = "Avenida Central 2" },
+            new Warehouse { Id = 1, Code = "MAIN", Name = "Principal" },
+            new Product { Id = 1, Sku = "ART-002", Name = "Artículo comprado", UnitPrice = 50 },
+            new PurchaseOrder
+            {
+                Id = 1,
+                Number = "PC-2026-0001",
+                SupplierId = 1,
+                WarehouseId = 1,
+                Status = PurchaseOrderStatus.Received,
+                Lines =
+                [
+                    new PurchaseOrderLine
+                    {
+                        ProductId = 1,
+                        Quantity = 3,
+                        UnitPrice = 50,
+                        DiscountPercentage = 0
+                    }
+                ]
+            });
+        database.SaveChanges();
+        var invoice = new Invoice
+        {
+            Type = InvoiceType.Purchase,
+            Series = "C",
+            Number = "2026-00001",
+            Status = InvoiceStatus.Issued,
+            PurchaseOrderId = 1,
+            TaxBase = 150,
+            TaxRate = 21,
+            TaxAmount = 31.50m,
+            Total = 181.50m,
+            Payments = [new Payment { Amount = 50, Method = "Transferencia", Date = DateTime.Today }]
+        };
+        database.Add(invoice);
+        database.SaveChanges();
+
+        var result = new InvoicesController(database).Pdf(invoice.Id, CreateService());
+
+        var file = Assert.IsType<FileContentResult>(result);
+        Assert.Equal("application/pdf", file.ContentType);
+        Assert.Equal("Factura-C-2026-00001.pdf", file.FileDownloadName);
         Assert.True(file.FileContents.Length > 1000);
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(file.FileContents, 0, 4));
     }
