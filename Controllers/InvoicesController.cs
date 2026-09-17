@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Models;
 using MiniErp.ViewModels;
+using MiniErp.Services;
 
 namespace MiniErp.Controllers;
 
@@ -87,6 +88,32 @@ public class InvoicesController(AppDbContext db) : Controller
     {
         var invoice = db.Invoices.AsNoTracking().Include(item => item.Payments).FirstOrDefault(item => item.Id == id);
         return invoice is null ? NotFound() : View(invoice);
+    }
+
+    [HttpGet]
+    public IActionResult Pdf(int id, [FromServices] InvoicePdfService pdfService)
+    {
+        var invoice = db.Invoices
+            .AsNoTracking()
+            .Include(item => item.Payments)
+            .Include(item => item.SalesOrder)
+                .ThenInclude(order => order!.Customer)
+            .Include(item => item.SalesOrder)
+                .ThenInclude(order => order!.Lines)
+                    .ThenInclude(line => line.Product)
+            .Include(item => item.PurchaseOrder)
+                .ThenInclude(order => order!.Supplier)
+            .Include(item => item.PurchaseOrder)
+                .ThenInclude(order => order!.Lines)
+                    .ThenInclude(line => line.Product)
+            .FirstOrDefault(item => item.Id == id);
+
+        if (invoice is null)
+            return NotFound();
+
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var invoiceNumber = string.Concat($"{invoice.Series}-{invoice.Number}".Where(character => !invalidCharacters.Contains(character)));
+        return File(pdfService.Generate(invoice), "application/pdf", $"Factura-{invoiceNumber}.pdf");
     }
 
     [HttpPost]

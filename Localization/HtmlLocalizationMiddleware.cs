@@ -8,6 +8,7 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
     private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
     {
         ["Los acumulados no incluyen facturas canceladas."] = "Totals exclude cancelled invoices.",
+        ["Descargar PDF"] = "Download PDF",
         ["Todos los proveedores"] = "All suppliers",
         ["Todos los clientes"] = "All customers",
         ["Todos los tipos"] = "All types",

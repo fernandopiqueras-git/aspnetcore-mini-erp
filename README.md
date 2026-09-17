@@ -56,3 +56,9 @@ La aplicación aplica la migración y carga datos de ejemplo la primera vez que 
 1. Facturación, cobros y pagos
 2. Usuarios, roles y auditoría
 3. API REST, Docker, integración continua y despliegue
+
+## Facturas PDF
+
+Las facturas de venta y compra se pueden descargar en PDF A4 desde su página de detalle. Los datos del emisor se configuran en la sección `Company` de `appsettings.json`. `LogoPath` admite una ruta a una imagen accesible por la aplicación; si se deja vacío, se muestra únicamente el nombre de la empresa.
+
+La generación utiliza QuestPDF 2026.9.0 con licencia Community. Antes de usarla en una organización, verifica que cumple sus condiciones de licencia.

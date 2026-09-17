@@ -3,9 +3,15 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Localization;
+using MiniErp.Options;
+using MiniErp.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<CompanyOptions>(builder.Configuration.GetSection("Company"));
+builder.Services.AddSingleton<InvoicePdfService>();
+QuestPDF.Settings.License = LicenseType.Community;
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
