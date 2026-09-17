@@ -59,6 +59,6 @@ La aplicación aplica la migración y carga datos de ejemplo la primera vez que 
 
 ## Facturas PDF
 
-Las facturas de venta y compra se pueden descargar en PDF A4 desde su página de detalle. Los datos del emisor se configuran en la sección `Company` de `appsettings.json`. `LogoPath` admite una ruta a una imagen accesible por la aplicación; si se deja vacío, se muestra únicamente el nombre de la empresa.
+Las facturas de venta y compra se pueden descargar en PDF A4 desde su página de detalle. Los datos del emisor se configuran en la sección `Company` de `appsettings.json`. `LogoPath` admite una ruta absoluta o relativa a la raíz de la aplicación. El proyecto incluye `wwwroot/images/demo-logo.png` como logotipo de demostración; sustitúyelo o cambia la ruta para usar el logotipo definitivo.
 
 La generación utiliza QuestPDF 2026.9.0 con licencia Community. Antes de usarla en una organización, verifica que cumple sus condiciones de licencia.

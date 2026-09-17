@@ -135,16 +135,6 @@ public class InvoicePdfService(
                         }
                     });
 
-                    content.Item().AlignRight().Width(250).Column(summary =>
-                    {
-                        SummaryRow(summary, Text("Base imponible", "Taxable base"), Money(invoice.TaxBase));
-                        SummaryRow(summary, $"{Text("IVA", "Tax")} ({invoice.TaxRate.ToString("N2", culture)} %)", Money(invoice.TaxAmount));
-                        summary.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten1);
-                        SummaryRow(summary, Text("TOTAL", "TOTAL"), Money(invoice.Total), true);
-                        SummaryRow(summary, Text("Pagado", "Paid"), Money(invoice.PaidAmount));
-                        SummaryRow(summary, Text("Pendiente", "Outstanding"), Money(invoice.Outstanding), true);
-                    });
-
                     if (invoice.Payments.Count > 0)
                     {
                         content.Item().PaddingTop(4).Text(Text("Cobros/Pagos", "Receipts/Payments")).FontSize(11).Bold();
@@ -170,6 +160,21 @@ public class InvoicePdfService(
                             }
                         });
                     }
+
+                    content.Item()
+                        .ExtendVertical()
+                        .AlignBottom()
+                        .AlignRight()
+                        .Width(250)
+                        .Column(summary =>
+                        {
+                            SummaryRow(summary, Text("Base imponible", "Taxable base"), Money(invoice.TaxBase));
+                            SummaryRow(summary, $"{Text("IVA", "Tax")} ({invoice.TaxRate.ToString("N2", culture)} %)", Money(invoice.TaxAmount));
+                            summary.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten1);
+                            SummaryRow(summary, Text("TOTAL", "TOTAL"), Money(invoice.Total), true);
+                            SummaryRow(summary, Text("Pagado", "Paid"), Money(invoice.PaidAmount));
+                            SummaryRow(summary, Text("Pendiente", "Outstanding"), Money(invoice.Outstanding), true);
+                        });
                 });
 
                 page.Footer()
