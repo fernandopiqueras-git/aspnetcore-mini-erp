@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using MiniErp.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -5,6 +7,7 @@ using MiniErp.Data;
 using MiniErp.Models;
 using MiniErp.ViewModels;
 namespace MiniErp.Controllers;
+[Authorize(Roles = AppRoles.Administrator + \",\" + AppRoles.Purchasing)]
 public class PurchaseOrdersController(AppDbContext db) : Controller
 {
  [HttpGet] public IActionResult Index(string? search,PurchaseOrderStatus? status){var q=db.PurchaseOrders.AsNoTracking().Include(x=>x.Supplier).Include(x=>x.Warehouse).Include(x=>x.Lines).AsQueryable();if(!string.IsNullOrWhiteSpace(search)){var t=search.Trim();q=q.Where(x=>x.Number.Contains(t)||x.Supplier.Name.Contains(t));}if(status.HasValue)q=q.Where(x=>x.Status==status);ViewBag.Search=search;ViewBag.Status=status;return View(q.OrderByDescending(x=>x.OrderDate).ToArray());}

@@ -62,3 +62,12 @@ La aplicación aplica la migración y carga datos de ejemplo la primera vez que 
 Las facturas de venta y compra se pueden descargar en PDF A4 desde su página de detalle. Los datos del emisor se configuran en la sección `Company` de `appsettings.json`. `LogoPath` admite una ruta absoluta o relativa a la raíz de la aplicación. El proyecto incluye `wwwroot/images/demo-logo.png` como logotipo de demostración; sustitúyelo o cambia la ruta para usar el logotipo definitivo.
 
 La generación utiliza QuestPDF 2026.9.0 con licencia Community. Antes de usarla en una organización, verifica que cumple sus condiciones de licencia.
+
+## Acceso y roles
+
+Ejecuta una vez `dotnet run -- --seed-admin` para crear los roles y el usuario inicial:
+
+- Usuario: `admin@minierp.local`
+- Contraseña: `ChangeMe123!`
+
+Después inicia normalmente la aplicación y cambia la contraseña desde el menú de usuario. Sustituye estos valores en `AdminUser` antes de un despliegue real. Los roles disponibles son Administrador, Ventas, Compras y Almacén.

@@ -1,0 +1,2 @@
+@model IReadOnlyList<AuditEntry>
+<h1>Auditoría</h1><div class="table-card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Id.</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Timestamp.ToLocalTime().ToString("g")</td><td>@item.UserName</td><td>@item.Action</td><td>@item.EntityName</td><td>@item.EntityId</td></tr>}</tbody></table></div>

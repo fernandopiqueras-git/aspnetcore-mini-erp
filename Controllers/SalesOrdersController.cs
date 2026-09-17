@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using MiniErp.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using MiniErp.ViewModels;
 
 namespace MiniErp.Controllers;
 
+[Authorize(Roles = AppRoles.Administrator + \",\" + AppRoles.Sales)]
 public class SalesOrdersController(AppDbContext database) : Controller
 {
     [HttpGet]

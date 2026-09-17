@@ -1,0 +1,2 @@
+@model IReadOnlyList<ApplicationUser>
+<div class="page-header"><h1>Usuarios</h1><a class="button primary" asp-action="Create">Nuevo usuario</a></div><div class="table-card"><table><thead><tr><th>Correo</th><th>Estado</th></tr></thead><tbody>@foreach(var user in Model){<tr><td>@user.Email</td><td>@(user.LockoutEnd>DateTimeOffset.UtcNow?"Bloqueado":"Activo")</td></tr>}</tbody></table></div>

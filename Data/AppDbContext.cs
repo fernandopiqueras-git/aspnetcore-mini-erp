@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MiniErp.Models;
 
 namespace MiniErp.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor? httpContextAccessor = null) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Product> Products => Set<Product>();
@@ -17,9 +19,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<WarehouseStock> WarehouseStocks => Set<WarehouseStock>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<AuditEntry>(entity =>
+        {
+            entity.HasIndex(entry => entry.Timestamp);
+            entity.HasIndex(entry => entry.UserName);
+        });
         modelBuilder.Entity<Customer>(entity =>
         {
             entity.HasIndex(customer => customer.TaxId).IsUnique();
@@ -95,4 +104,60 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasOne(movement => movement.DestinationWarehouse).WithMany(warehouse => warehouse.DestinationMovements).HasForeignKey(movement => movement.DestinationWarehouseId).OnDelete(DeleteBehavior.Restrict);
         });
     }
+
+    public override int SaveChanges()
+    {
+        var changes = CaptureChanges();
+        var result = base.SaveChanges();
+        SaveAuditEntries(changes);
+        return result;
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var changes = CaptureChanges();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        await SaveAuditEntriesAsync(changes, cancellationToken);
+        return result;
+    }
+
+    private List<AuditChange> CaptureChanges()
+    {
+        ChangeTracker.DetectChanges();
+        return ChangeTracker.Entries()
+            .Where(entry => entry.Entity is not AuditEntry && entry.Entity is not ApplicationUser
+                && entry.Entity.GetType().Namespace == typeof(Customer).Namespace
+                && entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(entry => new AuditChange(entry, entry.State.ToString(), entry.Metadata.ClrType.Name))
+            .ToList();
+    }
+
+    private void SaveAuditEntries(IReadOnlyCollection<AuditChange> changes)
+    {
+        if (changes.Count == 0) return;
+        AuditEntries.AddRange(changes.Select(CreateAuditEntry));
+        base.SaveChanges();
+    }
+
+    private async Task SaveAuditEntriesAsync(IReadOnlyCollection<AuditChange> changes, CancellationToken cancellationToken)
+    {
+        if (changes.Count == 0) return;
+        AuditEntries.AddRange(changes.Select(CreateAuditEntry));
+        await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private AuditEntry CreateAuditEntry(AuditChange change)
+    {
+        var key = string.Join(", ", change.Entry.Properties.Where(property => property.Metadata.IsPrimaryKey()).Select(property => property.CurrentValue?.ToString() ?? string.Empty));
+        return new AuditEntry
+        {
+            UserName = httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "Sistema",
+            Action = change.Action,
+            EntityName = change.EntityName,
+            EntityId = key,
+            Timestamp = DateTime.UtcNow
+        };
+    }
+
+    private sealed record AuditChange(EntityEntry Entry, string Action, string EntityName);
 }

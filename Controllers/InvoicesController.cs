@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using MiniErp.Security;
 using System.Data;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,7 @@ using MiniErp.Services;
 
 namespace MiniErp.Controllers;
 
+[Authorize(Roles = AppRoles.Administrator + \",\" + AppRoles.Sales + \",\" + AppRoles.Purchasing)]
 public class InvoicesController(AppDbContext db) : Controller
 {
     private static readonly HashSet<string> PaymentMethods = new(StringComparer.Ordinal)

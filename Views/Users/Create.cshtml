@@ -1,0 +1,2 @@
+@model CreateUserViewModel
+<h1>Nuevo usuario</h1><div class="form-card"><form asp-action="Create" method="post" class="form-grid"><div asp-validation-summary="ModelOnly" class="validation"></div><label>Correo<input asp-for="Email"/></label><label>Contraseña<input asp-for="Password"/></label><label>Confirmar<input asp-for="ConfirmPassword"/></label><label>Rol<select asp-for="Role" asp-items="ViewBag.Roles"></select></label><button class="button primary" type="submit">Crear</button></form></div>
