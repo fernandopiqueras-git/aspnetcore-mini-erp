@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Controllers;
 using MiniErp.Data;
@@ -76,6 +77,85 @@ public class StockMovementSecurityTests
         Assert.False(controller.ModelState.IsValid);
         Assert.Empty(database.StockMovements);
         Assert.Single(database.WarehouseStocks);
+    }
+
+    [Theory]
+    [InlineData(StockMovementType.Exit, null, 1)]
+    [InlineData(StockMovementType.Entry, null, null)]
+    [InlineData(StockMovementType.Adjustment, null, null)]
+    [InlineData(StockMovementType.Transfer, 1, 1)]
+    public void Create_RejectsInvalidWarehouseCombinationsWithoutChangingStock(
+        StockMovementType type,
+        int? sourceWarehouseId,
+        int? destinationWarehouseId)
+    {
+        using var database = CreateDatabase();
+        Seed(database);
+        var controller = new StockMovementsController(database);
+
+        var result = controller.Create(new StockMovementViewModel
+        {
+            Type = type,
+            ProductId = 1,
+            SourceWarehouseId = sourceWarehouseId,
+            DestinationWarehouseId = destinationWarehouseId,
+            Quantity = 2,
+            Reference = "TEST"
+        });
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Empty(database.StockMovements);
+        Assert.Equal(10m, database.Products.Single().Stock);
+        Assert.Equal(10m, database.WarehouseStocks.Single().Quantity);
+    }
+
+    [Theory]
+    [InlineData(0, "TEST")]
+    [InlineData(-1, "TEST")]
+    [InlineData(1, "   ")]
+    public void Create_RejectsInvalidQuantityOrReferenceWithoutChangingStock(decimal quantity, string reference)
+    {
+        using var database = CreateDatabase();
+        Seed(database);
+        var controller = new StockMovementsController(database);
+
+        var result = controller.Create(new StockMovementViewModel
+        {
+            Type = StockMovementType.Entry,
+            ProductId = 1,
+            DestinationWarehouseId = 1,
+            Quantity = quantity,
+            Reference = reference
+        });
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Empty(database.StockMovements);
+        Assert.Equal(10m, database.Products.Single().Stock);
+        Assert.Equal(10m, database.WarehouseStocks.Single().Quantity);
+    }
+
+    [Fact]
+    public void Create_RejectsUnknownMovementTypeWithoutChangingStock()
+    {
+        using var database = CreateDatabase();
+        Seed(database);
+        var controller = new StockMovementsController(database);
+
+        var result = controller.Create(new StockMovementViewModel
+        {
+            Type = (StockMovementType)999,
+            ProductId = 1,
+            DestinationWarehouseId = 1,
+            Quantity = 2,
+            Reference = "TEST"
+        });
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Empty(database.StockMovements);
+        Assert.Equal(10m, database.Products.Single().Stock);
     }
 
     private static AppDbContext CreateDatabase()

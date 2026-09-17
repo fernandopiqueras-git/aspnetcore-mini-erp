@@ -68,6 +68,7 @@ public class StockMovementsController(AppDbContext db) : Controller
 
     private IActionResult SaveMovement(StockMovementViewModel model, string viewName)
     {
+        model.Reference = model.Reference?.Trim() ?? string.Empty;
         ValidateReferences(model);
         if (!ModelState.IsValid)
         {
@@ -114,7 +115,7 @@ public class StockMovementsController(AppDbContext db) : Controller
             SourceWarehouseId = model.SourceWarehouseId,
             DestinationWarehouseId = model.DestinationWarehouseId,
             Quantity = model.Quantity,
-            Reference = model.Reference.Trim()
+            Reference = model.Reference
         });
 
         db.SaveChanges();
@@ -135,6 +136,24 @@ public class StockMovementsController(AppDbContext db) : Controller
 
     private void ValidateReferences(StockMovementViewModel model)
     {
+        if (!Enum.IsDefined(typeof(StockMovementType), model.Type))
+            ModelState.AddModelError(nameof(model.Type), "Tipo de movimiento no válido.");
+
+        if (model.Quantity <= 0)
+            ModelState.AddModelError(nameof(model.Quantity), "La cantidad debe ser mayor que cero.");
+
+        if (string.IsNullOrWhiteSpace(model.Reference) || model.Reference.Length > 160)
+            ModelState.AddModelError(nameof(model.Reference), "La referencia no es válida.");
+
+        if (model.Type is StockMovementType.Exit or StockMovementType.Transfer && !model.SourceWarehouseId.HasValue)
+            ModelState.AddModelError(nameof(model.SourceWarehouseId), "Selecciona el almacén de origen.");
+
+        if (model.Type is StockMovementType.Entry or StockMovementType.Transfer or StockMovementType.Adjustment && !model.DestinationWarehouseId.HasValue)
+            ModelState.AddModelError(nameof(model.DestinationWarehouseId), "Selecciona el almacén de destino.");
+
+        if (model.Type == StockMovementType.Transfer && model.SourceWarehouseId == model.DestinationWarehouseId)
+            ModelState.AddModelError(nameof(model.DestinationWarehouseId), "Los almacenes deben ser distintos.");
+
         if (!db.Products.Any(product => product.Id == model.ProductId && product.IsActive))
             ModelState.AddModelError(nameof(model.ProductId), "Artículo no válido.");
 
