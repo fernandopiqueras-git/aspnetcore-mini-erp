@@ -226,25 +226,90 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
         await using var buffer = new MemoryStream();
         context.Response.Body = buffer;
 
-        await next(context);
-
-        context.Response.Body = originalBody;
-        if (context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) != true)
+        try
         {
+            await next(context);
+            context.Response.Body = originalBody;
+
+            if (context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) != true)
+            {
+                buffer.Position = 0;
+                await buffer.CopyToAsync(originalBody);
+                return;
+            }
+
             buffer.Position = 0;
-            await buffer.CopyToAsync(originalBody);
-            return;
+            using var reader = new StreamReader(buffer, Encoding.UTF8);
+            var html = TranslateMarkup(await reader.ReadToEndAsync());
+            var output = Encoding.UTF8.GetBytes(html);
+            context.Response.ContentLength = output.Length;
+            await originalBody.WriteAsync(output);
+        }
+        finally
+        {
+            context.Response.Body = originalBody;
+        }
+    }
+
+    private static string TranslateMarkup(string html)
+    {
+        var result = new StringBuilder(html.Length);
+        var position = 0;
+
+        while (position < html.Length)
+        {
+            var tagStart = html.IndexOf('<', position);
+            if (tagStart < 0)
+            {
+                result.Append(TranslateText(html[position..]));
+                break;
+            }
+
+            result.Append(TranslateText(html[position..tagStart]));
+            var tagEnd = html.IndexOf('>', tagStart);
+            if (tagEnd < 0)
+            {
+                result.Append(html[tagStart..]);
+                break;
+            }
+
+            result.Append(TranslateAttributes(html[tagStart..(tagEnd + 1)]));
+            position = tagEnd + 1;
         }
 
-        buffer.Position = 0;
-        using var reader = new StreamReader(buffer, Encoding.UTF8);
-        var html = await reader.ReadToEndAsync();
+        return result.ToString();
+    }
 
+    private static string TranslateAttributes(string tag)
+    {
+        foreach (var attribute in new[] { "placeholder", "title", "aria-label" })
+        {
+            var marker = attribute + "=\"";
+            var searchFrom = 0;
+            while (true)
+            {
+                var valueStart = tag.IndexOf(marker, searchFrom, StringComparison.OrdinalIgnoreCase);
+                if (valueStart < 0)
+                    break;
+
+                valueStart += marker.Length;
+                var valueEnd = tag.IndexOf('"', valueStart);
+                if (valueEnd < 0)
+                    break;
+
+                var translated = TranslateText(tag[valueStart..valueEnd]);
+                tag = tag[..valueStart] + translated + tag[valueEnd..];
+                searchFrom = valueStart + translated.Length + 1;
+            }
+        }
+
+        return tag;
+    }
+
+    private static string TranslateText(string text)
+    {
         foreach (var translation in English.OrderByDescending(item => item.Key.Length))
-            html = html.Replace(translation.Key, translation.Value, StringComparison.Ordinal);
-
-        var output = Encoding.UTF8.GetBytes(html);
-        context.Response.ContentLength = output.Length;
-        await originalBody.WriteAsync(output);
+            text = text.Replace(translation.Key, translation.Value, StringComparison.Ordinal);
+        return text;
     }
 }
