@@ -8,8 +8,14 @@ using QuestPDF.Infrastructure;
 
 namespace MiniErp.Services;
 
-public class InvoicePdfService(IOptions<CompanyOptions> companyOptions)
+public class InvoicePdfService(
+    IOptions<CompanyOptions> companyOptions,
+    IHostEnvironment? environment = null)
 {
+    private readonly string? logoPath = ResolveLogoPath(
+        companyOptions.Value.LogoPath,
+        environment?.ContentRootPath ?? AppContext.BaseDirectory);
+
     public byte[] Generate(Invoice invoice)
     {
         var company = companyOptions.Value;
@@ -59,7 +65,7 @@ public class InvoicePdfService(IOptions<CompanyOptions> companyOptions)
                 {
                     header.Item().Row(row =>
                     {
-                        row.RelativeItem().Element(container => ComposeCompany(container, company));
+                        row.RelativeItem().Element(container => ComposeCompany(container, company, logoPath));
                         row.ConstantItem(220).AlignRight().Column(column =>
                         {
                             column.Item().Text(invoice.Type == InvoiceType.Sale
@@ -180,12 +186,30 @@ public class InvoicePdfService(IOptions<CompanyOptions> companyOptions)
         }).GeneratePdf();
     }
 
-    private static void ComposeCompany(IContainer container, CompanyOptions company)
+    private static string? ResolveLogoPath(string configuredPath, string contentRootPath)
+    {
+        if (string.IsNullOrWhiteSpace(configuredPath))
+            return null;
+
+        try
+        {
+            var path = Path.IsPathRooted(configuredPath)
+                ? Path.GetFullPath(configuredPath)
+                : Path.GetFullPath(configuredPath, contentRootPath);
+            return File.Exists(path) ? path : null;
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
+    }
+
+    private static void ComposeCompany(IContainer container, CompanyOptions company, string? resolvedLogoPath)
     {
         container.Row(row =>
         {
-            if (!string.IsNullOrWhiteSpace(company.LogoPath) && File.Exists(company.LogoPath))
-                row.ConstantItem(80).Height(45).PaddingRight(10).Image(company.LogoPath).FitArea();
+            if (resolvedLogoPath is not null)
+                row.ConstantItem(80).Height(45).PaddingRight(10).Image(resolvedLogoPath).FitArea();
 
             row.RelativeItem().Column(column =>
             {

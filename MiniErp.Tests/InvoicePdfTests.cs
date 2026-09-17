@@ -117,6 +117,42 @@ public class InvoicePdfTests
     }
 
     [Fact]
+    public void Service_GeneratesAMultipageInvoice()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+        var order = new SalesOrder
+        {
+            Customer = new Customer { Name = "Cliente extenso", TaxId = "12345678Z" },
+            Lines = Enumerable.Range(1, 80)
+                .Select(index => new SalesOrderLine
+                {
+                    Product = new Product { Sku = $"ART-{index:000}", Name = $"Artículo número {index}" },
+                    Quantity = 1,
+                    UnitPrice = 10,
+                    DiscountPercentage = 0
+                })
+                .ToArray()
+        };
+        var invoice = new Invoice
+        {
+            Type = InvoiceType.Sale,
+            Series = "V",
+            Number = "2026-00080",
+            Status = InvoiceStatus.Issued,
+            SalesOrder = order,
+            TaxBase = 800,
+            TaxRate = 21,
+            TaxAmount = 168,
+            Total = 968
+        };
+
+        var pdf = CreateService().Generate(invoice);
+
+        Assert.True(pdf.Length > 5000);
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));
+    }
+
+    [Fact]
     public void Pdf_ReturnsNotFoundForUnknownInvoice()
     {
         QuestPDF.Settings.License = LicenseType.Community;
