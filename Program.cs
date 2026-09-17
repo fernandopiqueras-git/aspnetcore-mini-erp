@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -42,7 +49,10 @@ using (var scope = app.Services.CreateScope())
     database.Database.Migrate();
     DemoData.Seed(database);
     if (args.Contains("--seed-admin", StringComparer.OrdinalIgnoreCase))
+    {
         await IdentityData.SeedAsync(services, builder.Configuration);
+        return;
+    }
 }
 var supportedCultures = new[] { new CultureInfo("es-ES"), new CultureInfo("en-US") };
 app.UseRequestLocalization(new RequestLocalizationOptions { DefaultRequestCulture = new RequestCulture("es-ES"), SupportedCultures = supportedCultures, SupportedUICultures = supportedCultures });
