@@ -1,3 +1,21 @@
 @model LoginViewModel
-@{ViewData["Title"]="Iniciar sesión";var returnUrl=ViewData["ReturnUrl"] as string;}
-<section class="form-card"><h1>Iniciar sesión</h1><form asp-action="Login" asp-route-returnUrl="@returnUrl" method="post" class="form-grid"><div asp-validation-summary="ModelOnly" class="validation"></div><label>Correo<input asp-for="Email"/></label><label>Contraseña<input asp-for="Password"/></label><label><input asp-for="RememberMe"/> Recordarme</label><button class="button primary" type="submit">Entrar</button></form></section>
+@{
+    ViewData["Title"] = "Iniciar sesión";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+<section class="login-card">
+    <p class="eyebrow">ACCESO SEGURO</p>
+    <h1>Iniciar sesión</h1>
+    <form asp-action="Login" asp-route-returnUrl="@returnUrl" method="post" class="form-grid">
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label>Correo<input asp-for="Email" autocomplete="username" /></label>
+        <span asp-validation-for="Email" class="validation"></span>
+        <label>Contraseña<input asp-for="Password" autocomplete="current-password" /></label>
+        <span asp-validation-for="Password" class="validation"></span>
+        <label class="remember-me">
+            <input asp-for="RememberMe" />
+            <span>Recordarme</span>
+        </label>
+        <button class="button primary login-button" type="submit">Entrar</button>
+    </form>
+</section>

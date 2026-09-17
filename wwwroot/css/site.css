@@ -80,3 +80,18 @@ th { color: #667085; font-size: .8rem; }
 .summary-note { margin: 0 0 1.25rem; color: #667085; font-size: .85rem; }
 @media (max-width: 1000px) { .invoice-summary { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) { .invoice-summary { grid-template-columns: 1fr; } }
+
+.login-card { width: min(680px, 100%); margin: 3rem auto; padding: 2rem; background: #fff; border: 1px solid #dbe2ea; border-radius: 18px; box-shadow: 0 14px 40px rgba(15, 23, 42, .08); }
+.remember-me { display: inline-flex !important; flex-direction: row !important; align-items: center; justify-content: flex-start; gap: .65rem; width: fit-content; cursor: pointer; }
+.remember-me input[type="checkbox"] { appearance: none; width: 1.15rem !important; height: 1.15rem; min-width: 1.15rem; margin: 0; border: 1px solid #94a3b8; border-radius: 4px; background: #fff; display: grid; place-content: center; }
+.remember-me input[type="checkbox"]::before { content: ""; width: .55rem; height: .55rem; transform: scale(0); transition: transform .12s ease-in-out; box-shadow: inset 1rem 1rem #fff; clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 20%, 84% 5%, 38% 70%); }
+.remember-me input[type="checkbox"]:checked { background: #1f63d8; border-color: #1f63d8; }
+.remember-me input[type="checkbox"]:checked::before { transform: scale(1); }
+.remember-me input[type="checkbox"]:focus-visible { outline: 3px solid rgba(31, 99, 216, .25); outline-offset: 2px; }
+.login-button { width: 100%; }
+.topbar-account { margin-left: auto; display: flex; align-items: center; gap: .75rem; white-space: nowrap; }
+.topbar-account form { margin: 0; }
+.link-button { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.account-name { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+.validation-summary { margin-bottom: 1rem; padding: 1rem; color: #b42318; background: #fff1f0; border-radius: 10px; }
+@media (max-width: 900px) { .topbar { flex-wrap: wrap; } .topbar-links { order: 3; width: 100%; overflow-x: auto; } .topbar-account { margin-left: 0; } }

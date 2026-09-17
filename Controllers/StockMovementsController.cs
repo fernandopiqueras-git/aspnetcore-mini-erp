@@ -1,3 +1,5 @@
+using MiniErp.Security;
+using Microsoft.AspNetCore.Authorization;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -8,6 +10,7 @@ using MiniErp.ViewModels;
 
 namespace MiniErp.Controllers;
 
+[Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Warehouse)]
 public class StockMovementsController(AppDbContext db) : Controller
 {
     [HttpGet]

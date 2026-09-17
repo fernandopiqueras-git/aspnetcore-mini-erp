@@ -1,7 +1,9 @@
 @using System.Globalization
+@using MiniErp.Security
 @{
     var culture = CultureInfo.CurrentUICulture.Name;
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var authenticated = User.Identity?.IsAuthenticated == true;
 }
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
@@ -14,24 +16,49 @@
 <body>
 <nav class="topbar">
     <a class="brand" asp-controller="Home" asp-action="Index">Mini ERP</a>
-    <div class="topbar-links">
-        <a asp-controller="Home" asp-action="Index">Panel</a>
-        <a asp-controller="Customers" asp-action="Index">Clientes</a>
-        <a asp-controller="Products" asp-action="Index">Artículos</a>
-        <a asp-controller="SalesOrders" asp-action="Index">Ventas</a>
-        <a asp-controller="Suppliers" asp-action="Index">Proveedores</a>
-        <a asp-controller="PurchaseOrders" asp-action="Index">Compras</a>
-        <a asp-controller="Warehouses" asp-action="Index">Almacenes</a>
-        <a asp-controller="StockMovements" asp-action="Index">Movimientos</a>
-        <a asp-controller="Invoices" asp-action="Index">Facturación</a>
-    </div>
-    <div class="language-switcher" aria-label="Idioma">
-        <a class="@(culture == "es-ES" ? "selected" : null)"
-           asp-controller="Culture" asp-action="Set"
-           asp-route-culture="es-ES" asp-route-returnUrl="@returnUrl">ES</a>
-        <a class="@(culture == "en-US" ? "selected" : null)"
-           asp-controller="Culture" asp-action="Set"
-           asp-route-culture="en-US" asp-route-returnUrl="@returnUrl">EN</a>
+    @if (authenticated)
+    {
+        <div class="topbar-links">
+            <a asp-controller="Home" asp-action="Index">Panel</a>
+            @if (User.IsInRole(AppRoles.Administrator) || User.IsInRole(AppRoles.Sales))
+            {
+                <a asp-controller="Customers" asp-action="Index">Clientes</a>
+                <a asp-controller="SalesOrders" asp-action="Index">Ventas</a>
+            }
+            @if (User.IsInRole(AppRoles.Administrator) || User.IsInRole(AppRoles.Purchasing))
+            {
+                <a asp-controller="Suppliers" asp-action="Index">Proveedores</a>
+                <a asp-controller="PurchaseOrders" asp-action="Index">Compras</a>
+            }
+            <a asp-controller="Products" asp-action="Index">Artículos</a>
+            @if (User.IsInRole(AppRoles.Administrator) || User.IsInRole(AppRoles.Warehouse))
+            {
+                <a asp-controller="Warehouses" asp-action="Index">Almacenes</a>
+                <a asp-controller="StockMovements" asp-action="Index">Movimientos</a>
+            }
+            @if (User.IsInRole(AppRoles.Administrator) || User.IsInRole(AppRoles.Sales) || User.IsInRole(AppRoles.Purchasing))
+            {
+                <a asp-controller="Invoices" asp-action="Index">Facturación</a>
+            }
+            @if (User.IsInRole(AppRoles.Administrator))
+            {
+                <a asp-controller="Users" asp-action="Index">Usuarios</a>
+                <a asp-controller="Audit" asp-action="Index">Auditoría</a>
+            }
+        </div>
+    }
+    <div class="topbar-account">
+        <div class="language-switcher" aria-label="Idioma">
+            <a class="@(culture == "es-ES" ? "selected" : null)" asp-controller="Culture" asp-action="Set" asp-route-culture="es-ES" asp-route-returnUrl="@returnUrl">ES</a>
+            <a class="@(culture == "en-US" ? "selected" : null)" asp-controller="Culture" asp-action="Set" asp-route-culture="en-US" asp-route-returnUrl="@returnUrl">EN</a>
+        </div>
+        @if (authenticated)
+        {
+            <a class="account-name" asp-controller="Account" asp-action="ChangePassword">@User.Identity!.Name</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button class="link-button" type="submit">Salir</button>
+            </form>
+        }
     </div>
 </nav>
 <main class="container">@RenderBody()</main>

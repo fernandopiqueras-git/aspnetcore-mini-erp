@@ -1,2 +1,33 @@
-@model IReadOnlyList<ApplicationUser>
-<div class="page-header"><h1>Usuarios</h1><a class="button primary" asp-action="Create">Nuevo usuario</a></div><div class="table-card"><table><thead><tr><th>Correo</th><th>Estado</th></tr></thead><tbody>@foreach(var user in Model){<tr><td>@user.Email</td><td>@(user.LockoutEnd>DateTimeOffset.UtcNow?"Bloqueado":"Activo")</td></tr>}</tbody></table></div>
+@model IReadOnlyList<UserListItemViewModel>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+<div class="page-header">
+    <div><p class="eyebrow">SEGURIDAD</p><h1>Usuarios</h1></div>
+    <a class="button primary" asp-action="Create">Nuevo usuario</a>
+</div>
+@if (TempData["Error"] is string error)
+{
+    <div class="validation-summary">@error</div>
+}
+<div class="table-card">
+<table>
+<thead><tr><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+<tbody>
+@foreach (var user in Model)
+{
+    <tr>
+        <td>@user.Email</td>
+        <td>@user.Roles</td>
+        <td><span class="status @(user.IsLocked ? "inactive" : "active")">@(user.IsLocked ? "Bloqueado" : "Activo")</span></td>
+        <td class="actions-cell">
+            <form asp-action="ToggleLock" method="post">
+                <input type="hidden" name="id" value="@user.Id" />
+                <button class="button @(user.IsLocked ? "secondary" : "danger")" type="submit">@(user.IsLocked ? "Desbloquear" : "Bloquear")</button>
+            </form>
+        </td>
+    </tr>
+}
+</tbody>
+</table>
+</div>

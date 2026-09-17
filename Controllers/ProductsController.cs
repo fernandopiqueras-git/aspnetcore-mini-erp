@@ -1,3 +1,5 @@
+using MiniErp.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
@@ -5,6 +7,7 @@ using MiniErp.Models;
 
 namespace MiniErp.Controllers;
 
+[Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Sales + "," + AppRoles.Purchasing + "," + AppRoles.Warehouse)]
 public class ProductsController(AppDbContext database) : Controller
 {
     [HttpGet]

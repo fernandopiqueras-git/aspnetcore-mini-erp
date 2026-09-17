@@ -1,8 +1,11 @@
+using MiniErp.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Models;
 namespace MiniErp.Controllers;
+[Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Warehouse)]
 public class WarehousesController(AppDbContext db):Controller
 {
  [HttpGet] public IActionResult Index()=>View(db.Warehouses.AsNoTracking().Include(x=>x.Stocks).OrderBy(x=>x.Code).ToArray());

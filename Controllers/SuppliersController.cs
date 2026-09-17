@@ -1,8 +1,11 @@
+using MiniErp.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Models;
 namespace MiniErp.Controllers;
+[Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Purchasing)]
 public class SuppliersController(AppDbContext db) : Controller
 {
  [HttpGet] public IActionResult Index(string? search, bool? active) { var q=db.Suppliers.AsNoTracking().AsQueryable(); if(!string.IsNullOrWhiteSpace(search)){var t=search.Trim();q=q.Where(x=>x.Name.Contains(t)||x.TaxId.Contains(t));} if(active.HasValue)q=q.Where(x=>x.IsActive==active);ViewBag.Search=search;ViewBag.Active=active;return View(q.OrderBy(x=>x.Name).ToArray()); }
