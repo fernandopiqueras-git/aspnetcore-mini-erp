@@ -30,7 +30,7 @@ public class IntegrityRegressionTests
             new Product { Id = 1, Sku = "A", Name = "Artículo", IsActive = true });
         database.SaveChanges();
 
-        new StockMovementsController(database).Create(new StockMovementViewModel
+        new StockMovementsController(database).ManualEntry(new StockMovementViewModel
         {
             Type = StockMovementType.Adjustment,
             ProductId = 1,
