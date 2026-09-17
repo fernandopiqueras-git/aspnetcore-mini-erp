@@ -33,8 +33,6 @@ public class InvoicesController(AppDbContext db) : Controller
         var order = db.SalesOrders.Include(item => item.Lines).FirstOrDefault(item => item.Id == id);
         if (order is null || order.Status != SalesOrderStatus.Completed)
             return BadRequest();
-        if (db.Invoices.Any(invoice => invoice.SalesOrderId == id))
-            return RedirectToAction(nameof(Index));
         return CreateInvoice(InvoiceType.Sale, series, taxRate, order.Total, id, null);
     }
 
@@ -45,8 +43,6 @@ public class InvoicesController(AppDbContext db) : Controller
         var order = db.PurchaseOrders.Include(item => item.Lines).FirstOrDefault(item => item.Id == id);
         if (order is null || order.Status != PurchaseOrderStatus.Received)
             return BadRequest();
-        if (db.Invoices.Any(invoice => invoice.PurchaseOrderId == id))
-            return RedirectToAction(nameof(Index));
         return CreateInvoice(InvoiceType.Purchase, series, taxRate, order.Total, null, id);
     }
 
@@ -109,6 +105,12 @@ public class InvoicesController(AppDbContext db) : Controller
             return BadRequest();
 
         using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
+        var existingInvoiceId = salesOrderId.HasValue
+            ? db.Invoices.Where(invoice => invoice.SalesOrderId == salesOrderId).Select(invoice => (int?)invoice.Id).FirstOrDefault()
+            : db.Invoices.Where(invoice => invoice.PurchaseOrderId == purchaseOrderId).Select(invoice => (int?)invoice.Id).FirstOrDefault();
+        if (existingInvoiceId.HasValue)
+            return RedirectToAction(nameof(Details), new { id = existingInvoiceId.Value });
+
         var yearPrefix = $"{DateTime.Today.Year}-";
         var numbers = db.Invoices.AsNoTracking()
             .Where(invoice => invoice.Series == series && invoice.Number.StartsWith(yearPrefix))

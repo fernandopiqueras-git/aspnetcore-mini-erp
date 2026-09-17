@@ -108,6 +108,23 @@ public class BillingWorkflowTests
         Assert.Equal($"{DateTime.Today.Year}-00002", invoices[1].Number);
     }
 
+    [Fact]
+    public void RepeatedSaleInvoiceCreationReturnsTheExistingInvoice()
+    {
+        using var database = CreateDatabase();
+        SeedCompletedSales(database);
+        var controller = new InvoicesController(database);
+
+        controller.FromSale(1, "V", 21);
+        var existing = Assert.Single(database.Invoices);
+        var result = controller.FromSale(1, "V", 21);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(InvoicesController.Details), redirect.ActionName);
+        Assert.Equal(existing.Id, redirect.RouteValues!["id"]);
+        Assert.Single(database.Invoices);
+    }
+
     private static Invoice AddInvoice(AppDbContext database, decimal total)
     {
         var invoice = new Invoice
