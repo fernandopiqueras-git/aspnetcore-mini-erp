@@ -87,7 +87,7 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
             return RedirectToAction(nameof(Index));
         }
 
-        var lockoutEnd = user.LockoutEnd > DateTimeOffset.UtcNow ? null : DateTimeOffset.MaxValue;
+        DateTimeOffset? lockoutEnd = user.LockoutEnd > DateTimeOffset.UtcNow ? null : DateTimeOffset.MaxValue;
         var result = await userManager.SetLockoutEndDateAsync(user, lockoutEnd);
         if (!result.Succeeded)
             TempData["Error"] = string.Join("; ", result.Errors.Select(error => error.Description));
