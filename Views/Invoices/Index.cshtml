@@ -1,2 +1,92 @@
-@model IEnumerable<Invoice>
-@{ViewData["Title"]="Facturación";}<div class="page-heading"><h1>Facturación</h1></div><div class="table-wrap"><table><thead><tr><th>Factura</th><th>Tipo</th><th>Fecha</th><th>Vencimiento</th><th>Estado</th><th>Total</th><th>Pendiente</th><th></th></tr></thead><tbody>@foreach(var x in Model){<tr><td>@x.Series-@x.Number</td><td>@x.Type</td><td>@x.IssueDate.ToString("d")</td><td>@x.DueDate.ToString("d")</td><td>@x.Status</td><td>@x.Total.ToString("N2") €</td><td>@x.Outstanding.ToString("N2") €</td><td><a asp-action="Details" asp-route-id="@x.Id">Ver</a></td></tr>}</tbody></table></div>
+@using System.Globalization
+@model MiniErp.ViewModels.InvoiceIndexViewModel
+@{
+    ViewData["Title"] = "Facturación";
+}
+
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">FACTURACIÓN</span>
+        <h1>Facturación</h1>
+    </div>
+</div>
+
+<form method="get" class="filters invoice-filters">
+    <select name="year">
+        <option value="">Todos los años</option>
+        @foreach (var year in Model.Years)
+        {
+            <option value="@year" selected="@(Model.Year == year ? "selected" : null)">@year</option>
+        }
+    </select>
+    <select name="month">
+        <option value="">Todos los meses</option>
+        @for (var month = 1; month <= 12; month++)
+        {
+            <option value="@month" selected="@(Model.Month == month ? "selected" : null)">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)</option>
+        }
+    </select>
+    <select name="type">
+        <option value="">Todos los tipos</option>
+        @foreach (var type in Enum.GetValues<InvoiceType>())
+        {
+            <option value="@type" selected="@(Model.Type == type ? "selected" : null)">@type</option>
+        }
+    </select>
+    <select name="status">
+        <option value="">Todos los estados</option>
+        @foreach (var status in Enum.GetValues<InvoiceStatus>())
+        {
+            <option value="@status" selected="@(Model.Status == status ? "selected" : null)">@status</option>
+        }
+    </select>
+    <select name="customerId">
+        <option value="">Todos los clientes</option>
+        @foreach (var customer in Model.Customers)
+        {
+            <option value="@customer.Id" selected="@(Model.CustomerId == customer.Id ? "selected" : null)">@customer.Name</option>
+        }
+    </select>
+    <select name="supplierId">
+        <option value="">Todos los proveedores</option>
+        @foreach (var supplier in Model.Suppliers)
+        {
+            <option value="@supplier.Id" selected="@(Model.SupplierId == supplier.Id ? "selected" : null)">@supplier.Name</option>
+        }
+    </select>
+    <button type="submit">Filtrar</button>
+    <a asp-action="Index">Limpiar</a>
+</form>
+
+<section class="summary invoice-summary" aria-label="Acumulados">
+    <article><span>Base acumulada</span><strong>@Model.AccumulatedTaxBase.ToString("N2") €</strong></article>
+    <article><span>Impuestos acumulados</span><strong>@Model.AccumulatedTax.ToString("N2") €</strong></article>
+    <article><span>Total acumulado</span><strong>@Model.AccumulatedTotal.ToString("N2") €</strong></article>
+    <article><span>Pagado</span><strong>@Model.AccumulatedPaid.ToString("N2") €</strong></article>
+    <article><span>Pendiente</span><strong>@Model.AccumulatedOutstanding.ToString("N2") €</strong></article>
+</section>
+<p class="summary-note">Los acumulados no incluyen facturas canceladas.</p>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Factura</th><th>Tipo</th><th>Cliente/Proveedor</th><th>Fecha</th><th>Vencimiento</th><th>Estado</th><th>Total</th><th>Pendiente</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var invoice in Model.Invoices)
+        {
+            <tr>
+                <td>@invoice.Series-@invoice.Number</td>
+                <td>@invoice.Type</td>
+                <td>@(invoice.SalesOrder?.Customer?.Name ?? invoice.PurchaseOrder?.Supplier?.Name ?? "—")</td>
+                <td>@invoice.IssueDate.ToString("d")</td>
+                <td>@invoice.DueDate.ToString("d")</td>
+                <td>@invoice.Status</td>
+                <td>@invoice.Total.ToString("N2") €</td>
+                <td>@invoice.Outstanding.ToString("N2") €</td>
+                <td class="row-actions"><a asp-action="Details" asp-route-id="@invoice.Id">Ver</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

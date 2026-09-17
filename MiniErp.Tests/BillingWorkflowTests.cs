@@ -179,6 +179,91 @@ public class BillingWorkflowTests
         Assert.Single(database.Invoices);
     }
 
+    [Fact]
+    public void Index_FiltersInvoicesAndCalculatesAccumulatedAmounts()
+    {
+        using var database = CreateDatabase();
+        database.AddRange(
+            new Customer { Id = 1, Name = "Cliente uno", TaxId = "12345678Z" },
+            new Customer { Id = 2, Name = "Cliente dos", TaxId = "87654321X" },
+            new Warehouse { Id = 1, Code = "MAIN", Name = "Principal" },
+            new SalesOrder { Id = 1, Number = "PV-1", CustomerId = 1, WarehouseId = 1 },
+            new SalesOrder { Id = 2, Number = "PV-2", CustomerId = 2, WarehouseId = 1 });
+        database.SaveChanges();
+
+        database.AddRange(
+            new Invoice
+            {
+                Type = InvoiceType.Sale,
+                Series = "V",
+                Number = "2026-00001",
+                IssueDate = new DateTime(2026, 5, 10),
+                Status = InvoiceStatus.Issued,
+                SalesOrderId = 1,
+                TaxBase = 100,
+                TaxAmount = 21,
+                Total = 121,
+                Payments = [new Payment { Amount = 20, Method = "Transferencia" }]
+            },
+            new Invoice
+            {
+                Type = InvoiceType.Sale,
+                Series = "V",
+                Number = "2026-00002",
+                IssueDate = new DateTime(2026, 6, 10),
+                Status = InvoiceStatus.Issued,
+                SalesOrderId = 2,
+                TaxBase = 200,
+                TaxAmount = 42,
+                Total = 242
+            });
+        database.SaveChanges();
+
+        var result = new InvoicesController(database).Index(
+            type: InvoiceType.Sale,
+            year: 2026,
+            month: 5,
+            customerId: 1);
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<MiniErp.ViewModels.InvoiceIndexViewModel>(view.Model);
+        Assert.Single(model.Invoices);
+        Assert.Equal(100m, model.AccumulatedTaxBase);
+        Assert.Equal(21m, model.AccumulatedTax);
+        Assert.Equal(121m, model.AccumulatedTotal);
+        Assert.Equal(20m, model.AccumulatedPaid);
+        Assert.Equal(101m, model.AccumulatedOutstanding);
+    }
+
+    [Fact]
+    public void Index_DoesNotAccumulateCancelledInvoices()
+    {
+        using var database = CreateDatabase();
+        var active = AddInvoice(database, 121);
+        active.TaxBase = 100;
+        active.TaxAmount = 21;
+        var cancelled = new Invoice
+        {
+            Series = "V",
+            Number = "2026-00002",
+            Status = InvoiceStatus.Cancelled,
+            TaxBase = 500,
+            TaxAmount = 105,
+            Total = 605
+        };
+        database.Add(cancelled);
+        database.SaveChanges();
+
+        var result = new InvoicesController(database).Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<MiniErp.ViewModels.InvoiceIndexViewModel>(view.Model);
+        Assert.Equal(2, model.Invoices.Count);
+        Assert.Equal(100m, model.AccumulatedTaxBase);
+        Assert.Equal(21m, model.AccumulatedTax);
+        Assert.Equal(121m, model.AccumulatedTotal);
+    }
+
     private static Invoice AddInvoice(AppDbContext database, decimal total)
     {
         var invoice = new Invoice

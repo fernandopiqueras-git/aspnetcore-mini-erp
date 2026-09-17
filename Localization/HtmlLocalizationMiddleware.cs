@@ -7,6 +7,18 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
 {
     private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
     {
+        ["Los acumulados no incluyen facturas canceladas."] = "Totals exclude cancelled invoices.",
+        ["Todos los proveedores"] = "All suppliers",
+        ["Todos los clientes"] = "All customers",
+        ["Todos los tipos"] = "All types",
+        ["Todos los meses"] = "All months",
+        ["Todos los años"] = "All years",
+        ["Impuestos acumulados"] = "Accumulated taxes",
+        ["Base acumulada"] = "Accumulated taxable base",
+        ["Total acumulado"] = "Accumulated total",
+        ["Cliente/Proveedor"] = "Customer/Supplier",
+        ["Acumulados"] = "Totals",
+        ["Pagado"] = "Paid",
         ["No se puede eliminar un artículo con pedidos, existencias o movimientos de stock."] = "A product with orders, stock or inventory movements cannot be deleted.",
         ["El stock se modifica mediante entradas, salidas, transferencias y regularizaciones."] = "Stock is changed through receipts, issues, transfers and adjustments.",
         ["Stock actual"] = "Current stock",

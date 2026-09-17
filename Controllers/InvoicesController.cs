@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
 using MiniErp.Models;
+using MiniErp.ViewModels;
 
 namespace MiniErp.Controllers;
 
@@ -18,14 +19,67 @@ public class InvoicesController(AppDbContext db) : Controller
     };
 
     [HttpGet]
-    public IActionResult Index(InvoiceType? type, InvoiceStatus? status)
+    public IActionResult Index(
+        InvoiceType? type = null,
+        InvoiceStatus? status = null,
+        int? year = null,
+        int? month = null,
+        int? customerId = null,
+        int? supplierId = null)
     {
-        var query = db.Invoices.AsNoTracking().Include(invoice => invoice.Payments).AsQueryable();
+        if (month is < 1 or > 12)
+            return BadRequest();
+
+        var query = db.Invoices
+            .AsNoTracking()
+            .Include(invoice => invoice.Payments)
+            .Include(invoice => invoice.SalesOrder)
+                .ThenInclude(order => order!.Customer)
+            .Include(invoice => invoice.PurchaseOrder)
+                .ThenInclude(order => order!.Supplier)
+            .AsQueryable();
+
         if (type.HasValue)
             query = query.Where(invoice => invoice.Type == type);
         if (status.HasValue)
             query = query.Where(invoice => invoice.Status == status);
-        return View(query.OrderByDescending(invoice => invoice.IssueDate).ToArray());
+        if (year.HasValue)
+            query = query.Where(invoice => invoice.IssueDate.Year == year);
+        if (month.HasValue)
+            query = query.Where(invoice => invoice.IssueDate.Month == month);
+        if (customerId.HasValue)
+            query = query.Where(invoice => invoice.SalesOrder != null && invoice.SalesOrder.CustomerId == customerId);
+        if (supplierId.HasValue)
+            query = query.Where(invoice => invoice.PurchaseOrder != null && invoice.PurchaseOrder.SupplierId == supplierId);
+
+        var invoices = query
+            .OrderByDescending(invoice => invoice.IssueDate)
+            .ThenByDescending(invoice => invoice.Id)
+            .ToArray();
+        var accumulatedInvoices = invoices.Where(invoice => invoice.Status != InvoiceStatus.Cancelled).ToArray();
+
+        return View(new InvoiceIndexViewModel
+        {
+            Invoices = invoices,
+            Customers = db.Customers.AsNoTracking().OrderBy(customer => customer.Name).ToArray(),
+            Suppliers = db.Suppliers.AsNoTracking().OrderBy(supplier => supplier.Name).ToArray(),
+            Years = db.Invoices.AsNoTracking()
+                .Select(invoice => invoice.IssueDate.Year)
+                .Distinct()
+                .OrderByDescending(value => value)
+                .ToArray(),
+            Type = type,
+            Status = status,
+            Year = year,
+            Month = month,
+            CustomerId = customerId,
+            SupplierId = supplierId,
+            AccumulatedTaxBase = accumulatedInvoices.Sum(invoice => invoice.TaxBase),
+            AccumulatedTax = accumulatedInvoices.Sum(invoice => invoice.TaxAmount),
+            AccumulatedTotal = accumulatedInvoices.Sum(invoice => invoice.Total),
+            AccumulatedPaid = accumulatedInvoices.Sum(invoice => invoice.PaidAmount),
+            AccumulatedOutstanding = accumulatedInvoices.Sum(invoice => invoice.Outstanding)
+        });
     }
 
     [HttpGet]

@@ -72,3 +72,11 @@ th { color: #667085; font-size: .8rem; }
 .detail-grid p { margin: .4rem 0 0; }
 @media (max-width: 900px) { .topbar { align-items: flex-start; flex-wrap: wrap; } .topbar .topbar-links { justify-content: flex-start; flex-basis: 100%; flex-wrap: wrap; order: 3; } }
 @media (max-width: 760px) { header, .page-heading { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: 1fr 1fr; } .filters { flex-direction: column; } .actions { align-items: stretch; flex-direction: column; } .actions form, .actions button, .actions > a { width: 100%; } .actions > a:last-child { margin-left: 0; } .detail-grid { grid-template-columns: 1fr; } }
+
+.invoice-filters { flex-wrap: wrap; }
+.invoice-filters select { flex: 1 1 160px; min-width: 0; }
+.invoice-summary { grid-template-columns: repeat(5, 1fr); margin-bottom: .4rem; }
+.invoice-summary strong { font-size: 1.35rem; }
+.summary-note { margin: 0 0 1.25rem; color: #667085; font-size: .85rem; }
+@media (max-width: 1000px) { .invoice-summary { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) { .invoice-summary { grid-template-columns: 1fr; } }
