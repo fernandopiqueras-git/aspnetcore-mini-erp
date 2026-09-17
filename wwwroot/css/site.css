@@ -116,3 +116,42 @@ th { color: #667085; font-size: .8rem; }
     outline: 3px solid rgba(96, 165, 250, .6);
     outline-offset: 2px;
 }
+
+.login-card {
+    width: min(500px, calc(100% - 2rem));
+    margin: 3rem auto;
+    padding: 2.25rem;
+}
+.login-card h1 {
+    margin: .35rem 0 1.75rem;
+}
+.login-card .form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .55rem;
+}
+.login-card .form-grid > label:not(.remember-me) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .45rem;
+    margin: 0;
+}
+.login-card .form-grid input:not([type="checkbox"]) {
+    width: 100%;
+    min-height: 46px;
+}
+.login-card .validation:empty {
+    display: none;
+}
+.login-card .remember-me {
+    margin: .35rem 0 .75rem;
+}
+.login-card .login-button {
+    min-height: 46px;
+}
+@media (max-width: 560px) {
+    .login-card {
+        margin: 1.5rem auto;
+        padding: 1.5rem;
+    }
+}
