@@ -40,10 +40,10 @@ public class StockMovementsController(AppDbContext db) : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult ManualEntry()
     {
         Lists();
-        return View(new StockMovementViewModel
+        return View("Create", new StockMovementViewModel
         {
             Type = StockMovementType.Entry,
             Reference = "Entrada manual"
@@ -52,17 +52,26 @@ public class StockMovementsController(AppDbContext db) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(StockMovementViewModel model)
+    public IActionResult ManualEntry(StockMovementViewModel model)
     {
         model.Type = StockMovementType.Entry;
         model.SourceWarehouseId = null;
         ModelState.Remove(nameof(model.Type));
         ModelState.Remove(nameof(model.SourceWarehouseId));
+        return SaveMovement(model, "Create");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Create(StockMovementViewModel model) => SaveMovement(model, "Create");
+
+    private IActionResult SaveMovement(StockMovementViewModel model, string viewName)
+    {
         ValidateReferences(model);
         if (!ModelState.IsValid)
         {
             Lists();
-            return View(model);
+            return View(viewName, model);
         }
 
         using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction() : null;
@@ -75,7 +84,7 @@ public class StockMovementsController(AppDbContext db) : Controller
             {
                 ModelState.AddModelError(nameof(model.Quantity), "Stock insuficiente.");
                 Lists();
-                return View(model);
+                return View(viewName, model);
             }
 
             source.Quantity -= model.Quantity;

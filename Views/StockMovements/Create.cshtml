@@ -5,7 +5,7 @@
 <div class="form-card">
     <span class="eyebrow">ALMACÉN</span>
     <h1>Entrada manual de stock</h1>
-    <form method="post">
+    <form method="post" asp-action="ManualEntry">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="All" class="validation"></div>
         <input asp-for="Type" type="hidden" value="@StockMovementType.Entry" />

@@ -24,7 +24,7 @@ public class StockMovementSecurityTests
             Reference = "MANUAL"
         };
 
-        controller.Create(model);
+        controller.ManualEntry(model);
 
         Assert.True(controller.ModelState.IsValid);
         var movement = Assert.Single(database.StockMovements);
@@ -44,7 +44,7 @@ public class StockMovementSecurityTests
         database.SaveChanges();
         var controller = new StockMovementsController(database);
 
-        controller.Create(new StockMovementViewModel
+        controller.ManualEntry(new StockMovementViewModel
         {
             ProductId = 1,
             DestinationWarehouseId = 1,
@@ -65,7 +65,7 @@ public class StockMovementSecurityTests
         Seed(database);
         var controller = new StockMovementsController(database);
 
-        controller.Create(new StockMovementViewModel
+        controller.ManualEntry(new StockMovementViewModel
         {
             ProductId = 1,
             DestinationWarehouseId = 999,

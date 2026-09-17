@@ -76,8 +76,9 @@ public class InvoicesController(AppDbContext db) : Controller
         if (invoice.Status != InvoiceStatus.Issued || amount <= 0 || amount > invoice.Outstanding || string.IsNullOrWhiteSpace(method) || method.Length > 80)
             return BadRequest();
 
+        var outstanding = invoice.Outstanding;
         invoice.Payments.Add(new Payment { Amount = amount, Method = method, Date = DateTime.Today });
-        if (amount == invoice.Outstanding)
+        if (amount == outstanding)
             invoice.Status = InvoiceStatus.Paid;
         db.SaveChanges();
         return RedirectToAction(nameof(Details), new { id });
