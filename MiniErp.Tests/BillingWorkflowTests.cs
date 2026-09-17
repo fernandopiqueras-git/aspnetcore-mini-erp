@@ -64,6 +64,22 @@ public class BillingWorkflowTests
         Assert.Empty(invoice.Payments);
     }
 
+    [Theory]
+    [InlineData(InvoiceStatus.Draft)]
+    [InlineData(InvoiceStatus.Issued)]
+    public void InvoiceWithoutPayments_CanBeCancelled(InvoiceStatus initialStatus)
+    {
+        using var database = CreateDatabase();
+        var invoice = AddInvoice(database, 121);
+        invoice.Status = initialStatus;
+        database.SaveChanges();
+
+        var result = new InvoicesController(database).Cancel(invoice.Id);
+
+        Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(InvoiceStatus.Cancelled, invoice.Status);
+    }
+
     [Fact]
     public void InvoiceWithPayments_CannotBeCancelled()
     {

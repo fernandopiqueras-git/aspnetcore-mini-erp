@@ -12,6 +12,7 @@
 @if (Model.Status is SalesOrderStatus.Draft or SalesOrderStatus.Confirmed) { <a class="button secondary" asp-action="Edit" asp-route-id="@Model.Id">Editar</a> }
 @if (Model.Status == SalesOrderStatus.Draft) { <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">@Html.AntiForgeryToken()<button>Confirmar</button></form> }
 @if (Model.Status == SalesOrderStatus.Confirmed) { <form asp-action="Complete" asp-route-id="@Model.Id" method="post">@Html.AntiForgeryToken()<button>Completar</button></form> }
+@if (Model.Status == SalesOrderStatus.Completed) { <form asp-controller="Invoices" asp-action="FromSale" asp-route-id="@Model.Id" method="post">@Html.AntiForgeryToken()<button>Crear factura</button></form> }
 @if (Model.Status is SalesOrderStatus.Draft or SalesOrderStatus.Confirmed) { <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">@Html.AntiForgeryToken()<button class="danger">Cancelar pedido</button></form> }
 <a asp-action="Index">Volver</a>
 </div>

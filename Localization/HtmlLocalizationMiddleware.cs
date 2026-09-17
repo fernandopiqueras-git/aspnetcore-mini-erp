@@ -96,6 +96,8 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
         ["Nuevo cliente"] = "New customer",
         ["Nuevo pedido"] = "New order",
         ["Nueva factura"] = "New invoice",
+        ["Crear factura"] = "Create invoice",
+        ["Cancelar factura"] = "Cancel invoice",
         ["Buscar por nombre o NIF/CIF"] = "Search by name or tax ID",
         ["Buscar por nombre o SKU"] = "Search by name or SKU",
         ["Nombre o NIF/CIF"] = "Name or tax ID",
