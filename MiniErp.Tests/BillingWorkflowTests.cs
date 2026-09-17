@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Controllers;
@@ -20,6 +21,28 @@ public class BillingWorkflowTests
         Assert.Equal(81m, invoice.Outstanding);
         Assert.Equal(InvoiceStatus.Issued, invoice.Status);
         Assert.Single(invoice.Payments);
+    }
+
+    [Fact]
+    public void LocalizedPaymentAmount_IsParsedCorrectly()
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("es-ES");
+            using var database = CreateDatabase();
+            var invoice = AddInvoice(database, 1234.56m);
+
+            var result = new InvoicesController(database).Pay(invoice.Id, "1.234,56", "Transferencia");
+
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+            Assert.Equal(0m, invoice.Outstanding);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
@@ -73,7 +74,18 @@ public class InvoicesController(AppDbContext db) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Pay(int id, decimal amount, string? method)
+    public IActionResult Pay(int id, string? amount, string? method)
+    {
+        if (!decimal.TryParse(amount, NumberStyles.Number, CultureInfo.CurrentCulture, out var parsedAmount))
+            return BadRequest();
+
+        return PayCore(id, parsedAmount, method);
+    }
+
+    [NonAction]
+    public IActionResult Pay(int id, decimal amount, string? method) => PayCore(id, amount, method);
+
+    private IActionResult PayCore(int id, decimal amount, string? method)
     {
         using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
         var invoice = db.Invoices.Include(item => item.Payments).FirstOrDefault(item => item.Id == id);
