@@ -76,7 +76,7 @@ public class InvoicePdfTests
     }
 
     private static InvoicePdfService CreateService() =>
-        new(Options.Create(new CompanyOptions
+        new(Microsoft.Extensions.Options.Options.Create(new CompanyOptions
         {
             Name = "Empresa de prueba",
             TaxId = "B00000000",
