@@ -11,7 +11,7 @@ using MiniErp.Services;
 
 namespace MiniErp.Controllers;
 
-[Authorize(Roles = AppRoles.Administrator + \",\" + AppRoles.Sales + \",\" + AppRoles.Purchasing)]
+[Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Sales + "," + AppRoles.Purchasing)]
 public class InvoicesController(AppDbContext db) : Controller
 {
     private static readonly HashSet<string> PaymentMethods = new(StringComparer.Ordinal)
