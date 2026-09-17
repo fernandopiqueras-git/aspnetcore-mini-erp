@@ -64,6 +64,19 @@ public class BillingWorkflowTests
         Assert.Empty(invoice.Payments);
     }
 
+    [Fact]
+    public void UnknownPaymentMethod_IsRejected()
+    {
+        using var database = CreateDatabase();
+        var invoice = AddInvoice(database, 121);
+
+        var result = new InvoicesController(database).Pay(invoice.Id, 20, "Criptomonedas");
+
+        Assert.IsType<BadRequestResult>(result);
+        Assert.Empty(invoice.Payments);
+        Assert.Equal(InvoiceStatus.Issued, invoice.Status);
+    }
+
     [Theory]
     [InlineData(InvoiceStatus.Draft)]
     [InlineData(InvoiceStatus.Issued)]

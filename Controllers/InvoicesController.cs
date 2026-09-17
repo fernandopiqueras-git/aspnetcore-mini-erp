@@ -8,6 +8,14 @@ namespace MiniErp.Controllers;
 
 public class InvoicesController(AppDbContext db) : Controller
 {
+    private static readonly HashSet<string> PaymentMethods = new(StringComparer.Ordinal)
+    {
+        "Transferencia",
+        "Tarjeta",
+        "Efectivo",
+        "Domiciliación bancaria"
+    };
+
     [HttpGet]
     public IActionResult Index(InvoiceType? type, InvoiceStatus? status)
     {
@@ -73,7 +81,7 @@ public class InvoicesController(AppDbContext db) : Controller
             return NotFound();
 
         method = method?.Trim();
-        if (invoice.Status != InvoiceStatus.Issued || amount <= 0 || amount > invoice.Outstanding || string.IsNullOrWhiteSpace(method) || method.Length > 80)
+        if (invoice.Status != InvoiceStatus.Issued || amount <= 0 || amount > invoice.Outstanding || method is null || !PaymentMethods.Contains(method))
             return BadRequest();
 
         var outstanding = invoice.Outstanding;
