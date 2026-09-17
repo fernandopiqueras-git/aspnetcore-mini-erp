@@ -275,7 +275,27 @@ public class HtmlLocalizationMiddleware(RequestDelegate next)
                 break;
             }
 
-            result.Append(TranslateAttributes(html[tagStart..(tagEnd + 1)]));
+            var tag = html[tagStart..(tagEnd + 1)];
+            result.Append(TranslateAttributes(tag));
+
+            var rawElement = tag.StartsWith("<script", StringComparison.OrdinalIgnoreCase)
+                ? "script"
+                : tag.StartsWith("<style", StringComparison.OrdinalIgnoreCase) ? "style" : null;
+            if (rawElement is not null)
+            {
+                var closingStart = html.IndexOf($"</{rawElement}", tagEnd + 1, StringComparison.OrdinalIgnoreCase);
+                var closingEnd = closingStart < 0 ? -1 : html.IndexOf('>', closingStart);
+                if (closingEnd < 0)
+                {
+                    result.Append(html[(tagEnd + 1)..]);
+                    break;
+                }
+
+                result.Append(html[(tagEnd + 1)..(closingEnd + 1)]);
+                position = closingEnd + 1;
+                continue;
+            }
+
             position = tagEnd + 1;
         }
 
