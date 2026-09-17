@@ -34,25 +34,32 @@ public class SpanishEnumLocalizationMiddleware(RequestDelegate next)
         await using var buffer = new MemoryStream();
         context.Response.Body = buffer;
 
-        await next(context);
-
-        context.Response.Body = originalBody;
-        if (context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) != true)
+        try
         {
+            await next(context);
+            context.Response.Body = originalBody;
+
+            if (context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) != true)
+            {
+                buffer.Position = 0;
+                await buffer.CopyToAsync(originalBody);
+                return;
+            }
+
             buffer.Position = 0;
-            await buffer.CopyToAsync(originalBody);
-            return;
+            using var reader = new StreamReader(buffer, Encoding.UTF8);
+            var html = await reader.ReadToEndAsync();
+
+            foreach (var translation in Translations)
+                html = html.Replace(translation.Key, translation.Value, StringComparison.Ordinal);
+
+            var output = Encoding.UTF8.GetBytes(html);
+            context.Response.ContentLength = output.Length;
+            await originalBody.WriteAsync(output);
         }
-
-        buffer.Position = 0;
-        using var reader = new StreamReader(buffer, Encoding.UTF8);
-        var html = await reader.ReadToEndAsync();
-
-        foreach (var translation in Translations)
-            html = html.Replace(translation.Key, translation.Value, StringComparison.Ordinal);
-
-        var output = Encoding.UTF8.GetBytes(html);
-        context.Response.ContentLength = output.Length;
-        await originalBody.WriteAsync(output);
+        finally
+        {
+            context.Response.Body = originalBody;
+        }
     }
 }

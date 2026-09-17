@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniErp.Data;
@@ -68,6 +69,7 @@ public class InvoicesController(AppDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Pay(int id, decimal amount, string? method)
     {
+        using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
         var invoice = db.Invoices.Include(item => item.Payments).FirstOrDefault(item => item.Id == id);
         if (invoice is null)
             return NotFound();
@@ -81,6 +83,7 @@ public class InvoicesController(AppDbContext db) : Controller
         if (amount == outstanding)
             invoice.Status = InvoiceStatus.Paid;
         db.SaveChanges();
+        transaction?.Commit();
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -105,6 +108,7 @@ public class InvoicesController(AppDbContext db) : Controller
         if (string.IsNullOrWhiteSpace(series) || series.Length > 10 || taxRate is < 0 or > 100 || taxBase < 0)
             return BadRequest();
 
+        using var transaction = db.Database.IsRelational() ? db.Database.BeginTransaction(IsolationLevel.Serializable) : null;
         var yearPrefix = $"{DateTime.Today.Year}-";
         var numbers = db.Invoices.AsNoTracking()
             .Where(invoice => invoice.Series == series && invoice.Number.StartsWith(yearPrefix))
@@ -129,6 +133,7 @@ public class InvoicesController(AppDbContext db) : Controller
         invoice.Total = invoice.TaxBase + invoice.TaxAmount;
         db.Add(invoice);
         db.SaveChanges();
+        transaction?.Commit();
         return RedirectToAction(nameof(Details), new { id = invoice.Id });
     }
 }

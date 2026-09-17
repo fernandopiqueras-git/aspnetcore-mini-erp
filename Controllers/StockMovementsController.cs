@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +47,7 @@ public class StockMovementsController(AppDbContext db) : Controller
         return View("Create", new StockMovementViewModel
         {
             Type = StockMovementType.Entry,
-            Reference = "Entrada manual"
+            Reference = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en" ? "Manual receipt" : "Entrada manual"
         });
     }
 
