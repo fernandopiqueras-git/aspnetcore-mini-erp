@@ -176,12 +176,25 @@ public class SalesOrdersController(AppDbContext database) : Controller
 
     private void ValidateOrder(SalesOrderFormViewModel model)
     {
+        if (string.IsNullOrWhiteSpace(model.Number) || model.Number.Length > 30)
+            ModelState.AddModelError(nameof(model.Number), "El número no es válido.");
         if (database.SalesOrders.Any(order => order.Id != model.Id && order.Number == model.Number))
             ModelState.AddModelError(nameof(model.Number), "Ya existe un pedido con este número.");
 
         var customer = database.Customers.AsNoTracking().FirstOrDefault(item => item.Id == model.CustomerId);
         if (customer is null || !customer.IsActive)
             ModelState.AddModelError(nameof(model.CustomerId), "Selecciona un cliente activo.");
+
+        if (model.Lines.Count == 0)
+            ModelState.AddModelError(nameof(model.Lines), "El pedido debe tener al menos una línea.");
+        if (model.Lines.Where(line => line.ProductId > 0).GroupBy(line => line.ProductId).Any(group => group.Count() > 1))
+            ModelState.AddModelError(nameof(model.Lines), "No se puede repetir un artículo.");
+        if (model.Lines.Any(line => line.Quantity is <= 0 or > 999999999.999m))
+            ModelState.AddModelError(nameof(model.Lines), "La cantidad de las líneas no es válida.");
+        if (model.Lines.Any(line => line.UnitPrice is < 0 or > 999999999.99m))
+            ModelState.AddModelError(nameof(model.Lines), "El precio de las líneas no es válido.");
+        if (model.Lines.Any(line => line.DiscountPercentage is < 0 or > 100))
+            ModelState.AddModelError(nameof(model.Lines), "El descuento de las líneas no es válido.");
 
         var productIds = model.Lines.Select(line => line.ProductId).Distinct().ToArray();
         var activeProducts = database.Products.AsNoTracking().Where(product => productIds.Contains(product.Id) && product.IsActive).Select(product => product.Id).ToHashSet();

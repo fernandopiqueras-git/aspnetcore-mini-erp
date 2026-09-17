@@ -111,6 +111,45 @@ public class SalesOrdersControllerTests
         Assert.Equal(54m, line.LineTotal);
     }
 
+    [Theory]
+    [InlineData(0, 10, 0)]
+    [InlineData(-1, 10, 0)]
+    [InlineData(1, -1, 0)]
+    [InlineData(1, 10, -1)]
+    [InlineData(1, 10, 101)]
+    public void Create_RejectsInvalidLineValuesWithoutPersisting(decimal quantity, decimal unitPrice, decimal discount)
+    {
+        using var database = CreateDatabase();
+        Seed(database);
+        var controller = new SalesOrdersController(database);
+        var model = ValidModel();
+        model.Lines[0].Quantity = quantity;
+        model.Lines[0].UnitPrice = unitPrice;
+        model.Lines[0].DiscountPercentage = discount;
+
+        var result = controller.Create(model);
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Empty(database.SalesOrders);
+    }
+
+    [Fact]
+    public void Create_RejectsEmptyLinesWithoutPersisting()
+    {
+        using var database = CreateDatabase();
+        Seed(database);
+        var controller = new SalesOrdersController(database);
+        var model = ValidModel();
+        model.Lines = [];
+
+        var result = controller.Create(model);
+
+        Assert.IsType<ViewResult>(result);
+        Assert.False(controller.ModelState.IsValid);
+        Assert.Empty(database.SalesOrders);
+    }
+
     private static SalesOrderFormViewModel ValidModel(int id = 0) => new()
     {
         Id = id,
